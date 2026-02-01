@@ -56,6 +56,10 @@ const App = () => (
 
           {/* Public Action Routes (No Layout) */}
           <Route path="/p/:id/:action" element={<ProposalActionPage />} />
+          <Route
+            path="/r/:action/:proposalId"
+            element={<ProposalActionPage />}
+          />
 
           {/* Corretor Routes */}
           <Route path="/app" element={<AppLayout />}>

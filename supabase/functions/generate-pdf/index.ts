@@ -99,11 +99,12 @@ Deno.serve(async (req) => {
       validityDate.setDate(validityDate.getDate() + 7)
       const validityStr = validityDate.toLocaleDateString('pt-BR')
 
-      // Create links for PDF actions
+      // Create links for PDF actions - UPDATED for new Tracking Route
       const appUrl =
-        req.headers.get('origin') || 'https://pdfcorretor-foundation.goskip.app'
-      const acceptLink = `${appUrl}/p/${proposal.id}/accept`
-      const adjustmentsLink = `${appUrl}/p/${proposal.id}/request_changes`
+        req.headers.get('origin') ||
+        'https://pdfcorretor-foundation-e5997.goskip.app'
+      const acceptLink = `${appUrl}/r/aceitar/${proposal.id}`
+      const adjustmentsLink = `${appUrl}/r/ajustes/${proposal.id}`
 
       const payload = {
         template_id: layout?.gamma_template_id || 'default', // Use DB template ID

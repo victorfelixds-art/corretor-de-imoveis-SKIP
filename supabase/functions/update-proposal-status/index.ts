@@ -10,52 +10,98 @@ Deno.serve(async (req) => {
   try {
     const { proposal_id, action } = await req.json()
 
-    if (!proposal_id || !['accept', 'request_changes'].includes(action)) {
-      throw new Error('Invalid parameters')
+    if (!proposal_id || !action) {
+      throw new Error('Missing proposal_id or action')
     }
 
-    // Use Service Role to bypass RLS (since this is called by public client via proxy page)
     const supabaseAdmin = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
     )
 
-    // 1. Fetch Proposal and Broker Info
-    const { data: proposal, error: fetchError } = await supabaseAdmin
+    // 1. Validate Proposal
+    const { data: proposal, error: proposalError } = await supabaseAdmin
       .from('proposals')
-      .select('*, property:properties(name), user:profiles(*)')
+      .select('*, user_id')
       .eq('id', proposal_id)
       .single()
 
-    if (fetchError || !proposal) throw new Error('Proposal not found')
+    if (proposalError || !proposal) {
+      throw new Error('Link inválido ou proposta não encontrada')
+    }
 
-    // 2. Update Status
-    const newStatus = action === 'accept' ? 'Aceita' : 'Pediu ajustes'
+    // 2. Map Action to Status and Event Type
+    let status = ''
+    let eventType = ''
+    let messageKey = ''
 
-    // Only update if not already in a final state? User story allows updates.
+    if (action === 'aceitar' || action === 'accept') {
+      status = 'Aceita'
+      eventType = 'aceitar'
+      messageKey = 'whatsapp_accept_message'
+    } else if (action === 'ajustes' || action === 'request_changes') {
+      status = 'Pediu ajustes'
+      eventType = 'ajustes'
+      messageKey = 'whatsapp_adjust_message'
+    } else {
+      throw new Error('Ação inválida')
+    }
+
+    // 3. Update Proposal Status
     const { error: updateError } = await supabaseAdmin
       .from('proposals')
-      .update({ status: newStatus })
+      .update({ status })
       .eq('id', proposal_id)
 
     if (updateError) throw updateError
 
-    // 3. Construct WhatsApp Message
-    const brokerPhone = proposal.user?.phone || '5511999999999' // Fallback
-    const propertyName = proposal.property?.name || 'Imóvel'
+    // 4. Log Event
+    await supabaseAdmin.from('proposal_events').insert({
+      proposal_id,
+      type: eventType,
+    })
 
-    let message = ''
-    if (action === 'accept') {
-      message = `Olá ${proposal.user?.name}, gostaria de aceitar a proposta do imóvel ${propertyName}. Podemos prosseguir?`
-    } else {
-      message = `Olá ${proposal.user?.name}, gostaria de solicitar ajustes na proposta do imóvel ${propertyName}.`
+    // 5. Get Agent Profile (Phone)
+    const { data: profile } = await supabaseAdmin
+      .from('profiles')
+      .select('phone')
+      .eq('id', proposal.user_id)
+      .single()
+
+    if (!profile?.phone) {
+      // Fallback or Error? We can return success but no phone redirect
+      console.warn('Agent has no phone')
     }
 
-    const whatsappUrl = `https://wa.me/${brokerPhone.replace(/\D/g, '')}?text=${encodeURIComponent(message)}`
+    // 6. Get Message Template
+    const { data: setting } = await supabaseAdmin
+      .from('admin_settings')
+      .select('value')
+      .eq('key', messageKey)
+      .single()
 
-    return new Response(JSON.stringify({ whatsappUrl }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    })
+    const template = setting?.value || `Olá, sobre a proposta ${proposal_id}...`
+    const message = template.replace('{{PROPOSTA.ID}}', proposal_id.slice(0, 8))
+
+    // 7. Construct WhatsApp URL
+    // Sanitize phone (remove non-digits)
+    const phone = (profile?.phone || '').replace(/\D/g, '')
+
+    // Only redirect if we have a valid-looking phone number (at least 10 digits)
+    const whatsappUrl =
+      phone.length >= 10
+        ? `https://wa.me/55${phone}?text=${encodeURIComponent(message)}`
+        : null
+
+    return new Response(
+      JSON.stringify({
+        success: true,
+        whatsappUrl,
+      }),
+      {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      },
+    )
   } catch (error) {
     return new Response(JSON.stringify({ error: error.message }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

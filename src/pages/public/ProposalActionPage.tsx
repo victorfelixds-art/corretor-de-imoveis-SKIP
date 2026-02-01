@@ -1,21 +1,28 @@
 import { useEffect, useState } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams } from 'react-router-dom'
 import { supabase } from '@/lib/supabase/client'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Loader2, CheckCircle, AlertCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
 export default function ProposalActionPage() {
-  const { id, action } = useParams()
+  const params = useParams()
+  // Handle both /p/:id/:action and /r/:action/:proposalId patterns
+  const id = params.id || params.proposalId
+  const action = params.action
+
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>(
     'loading',
   )
   const [errorMsg, setErrorMsg] = useState('')
-  const navigate = useNavigate()
 
   useEffect(() => {
     const performAction = async () => {
-      if (!id || !action) return
+      if (!id || !action) {
+        setStatus('error')
+        setErrorMsg('Link inválido: Parâmetros faltando.')
+        return
+      }
 
       try {
         const { data, error } = await supabase.functions.invoke(
@@ -26,6 +33,7 @@ export default function ProposalActionPage() {
         )
 
         if (error) throw new Error(error.message || 'Failed to update status')
+        if (data?.error) throw new Error(data.error)
 
         setStatus('success')
 
@@ -50,7 +58,9 @@ export default function ProposalActionPage() {
       <Card className="w-full max-w-md shadow-lg">
         <CardHeader className="text-center">
           <CardTitle>
-            {action === 'accept' ? 'Aceitando Proposta' : 'Solicitando Ajustes'}
+            {action === 'accept' || action === 'aceitar'
+              ? 'Aceitando Proposta'
+              : 'Solicitando Ajustes'}
           </CardTitle>
         </CardHeader>
         <CardContent className="flex flex-col items-center justify-center py-8 gap-4">

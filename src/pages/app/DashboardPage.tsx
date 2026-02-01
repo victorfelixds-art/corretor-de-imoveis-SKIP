@@ -17,6 +17,7 @@ import {
   Building2,
   Layout,
   Square,
+  Activity,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { proposalsService } from '@/services/proposals'
@@ -86,6 +87,10 @@ export default function DashboardPage() {
     (p) => p.status === 'Aceita',
   ).length
 
+  // Conversion Rate: Accepted / Generated
+  const conversionRate =
+    generatedCount > 0 ? (acceptedCount / generatedCount) * 100 : 0
+
   const possibleValue = filteredProposals.reduce(
     (sum, p) => sum + Number(p.final_price),
     0,
@@ -117,7 +122,6 @@ export default function DashboardPage() {
   const hasProperties = propertiesCount > 0
   const hasActiveLayout = !!user?.active_layout_id
   const hasProposals = proposals.length > 0
-  const showOnboarding = !hasProperties || !hasProposals // Hide only if both are done (assuming layout is part of proposal flow) - wait, spec says "auto-hide once all three items are completed"
   const allStepsCompleted = hasProperties && hasActiveLayout && hasProposals
 
   const isProposalDisabled = !hasActiveLayout
@@ -333,22 +337,22 @@ export default function DashboardPage() {
             </div>
           </CardContent>
         </Card>
-        <Card className="hover:shadow-md transition-shadow">
+
+        {/* New Conversion Rate Card */}
+        <Card className="hover:shadow-md transition-shadow bg-gradient-to-br from-card to-secondary/5">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
-              Valor Possível
+              Taxa de Conversão
             </CardTitle>
-            <AlertCircle className="h-4 w-4 text-blue-400" />
+            <Activity className="h-4 w-4 text-purple-500" />
           </CardHeader>
           <CardContent>
-            <div
-              className="text-xl font-bold text-foreground truncate"
-              title={formatCurrency(possibleValue)}
-            >
-              {formatCurrency(possibleValue)}
+            <div className="text-2xl font-bold text-purple-600">
+              {conversionRate.toFixed(1)}%
             </div>
           </CardContent>
         </Card>
+
         <Card className="hover:shadow-md transition-shadow">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -498,6 +502,3 @@ export default function DashboardPage() {
     </div>
   )
 }
-
-// Icon import helper
-import { Building2 as Building2Icon, Library } from 'lucide-react'
