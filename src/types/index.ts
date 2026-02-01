@@ -5,6 +5,7 @@ export interface Profile {
   name: string | null
   email: string
   role: Role
+  active_layout_id?: string
   created_at: string
   updated_at: string
 }
@@ -55,7 +56,7 @@ export interface Layout {
   name: string
   is_pro: boolean
   preview_url: string
-  active: boolean
+  description?: string
 }
 
 export interface CreditUsageLog {
@@ -63,4 +64,37 @@ export interface CreditUsageLog {
   user_id: string
   credit_type: 'monthly' | 'extra'
   created_at: string
+}
+
+export interface Property {
+  id: string
+  user_id: string
+  name: string
+  price: number
+  address: string
+  sq_meters: number
+  images: string[]
+  features: {
+    defaults: string[]
+    custom: string[]
+  }
+  created_at: string
+}
+
+export type ProposalStatus = 'Gerada' | 'Pediu ajustes' | 'Aceita'
+
+export interface Proposal {
+  id: string
+  user_id: string
+  property_id: string
+  client_name: string
+  unit: string | null
+  final_price: number
+  discount: number
+  payment_conditions: string[]
+  layout_id: string
+  status: ProposalStatus
+  pdf_url: string | null
+  created_at: string
+  property?: Property
 }

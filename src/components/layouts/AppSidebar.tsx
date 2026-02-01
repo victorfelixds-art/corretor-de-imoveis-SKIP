@@ -5,6 +5,8 @@ import {
   User,
   LogOut,
   Building2,
+  Library,
+  HelpCircle,
 } from 'lucide-react'
 import {
   Sidebar,
@@ -20,17 +22,34 @@ import {
   useSidebar,
 } from '@/components/ui/sidebar'
 import useAuthStore from '@/stores/useAuthStore'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link, useLocation } from 'react-router-dom'
 
 export function AppSidebar() {
   const { user, logout } = useAuthStore()
   const navigate = useNavigate()
   const { isMobile } = useSidebar()
+  const location = useLocation()
 
   const handleLogout = async () => {
     await logout()
     navigate('/')
   }
+
+  const isActive = (path: string) => {
+    if (path === '/app' && location.pathname === '/app') return true
+    if (path !== '/app' && location.pathname.startsWith(path)) return true
+    return false
+  }
+
+  const menuItems = [
+    { title: 'Dashboard', url: '/app', icon: Home },
+    { title: 'Imóveis', url: '/app/properties', icon: Building2 },
+    { title: 'Propostas', url: '/app/proposals', icon: FileText },
+    { title: 'Biblioteca', url: '/app/library', icon: Library },
+    { title: 'Planos', url: '/app/plans', icon: CreditCard },
+    { title: 'Suporte', url: '/app/support', icon: HelpCircle },
+    { title: 'Perfil', url: '/app/profile', icon: User },
+  ]
 
   return (
     <Sidebar variant="sidebar" collapsible="icon">
@@ -58,38 +77,20 @@ export function AppSidebar() {
           <SidebarGroupLabel>Menu Principal</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild tooltip="Dashboard">
-                  <a href="/app">
-                    <Home />
-                    <span>Painel de Controle</span>
-                  </a>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild tooltip="Imóveis">
-                  <a href="/app/properties">
-                    <Building2 />
-                    <span>Meus Imóveis</span>
-                  </a>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild tooltip="Propostas">
-                  <a href="/app/proposals">
-                    <FileText />
-                    <span>Propostas PDF</span>
-                  </a>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild tooltip="Créditos">
-                  <a href="/app/credits">
-                    <CreditCard />
-                    <span>Meus Créditos</span>
-                  </a>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
+              {menuItems.map((item) => (
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton
+                    asChild
+                    tooltip={item.title}
+                    isActive={isActive(item.url)}
+                  >
+                    <Link to={item.url}>
+                      <item.icon />
+                      <span>{item.title}</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
