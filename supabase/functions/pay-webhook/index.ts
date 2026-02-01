@@ -44,26 +44,19 @@ Deno.serve(async (req) => {
           // One-time payment for extra credits
           const creditsToAdd = Number(metadata.credits || 20)
 
-          // Increment extra credits
-          await supabase
-            .rpc('increment_extra_credits', {
+          // Increment extra credits using RPC
+          const { error: rpcError } = await supabase.rpc(
+            'increment_extra_credits',
+            {
               user_uuid: userId,
               amount: creditsToAdd,
-            })
-            .catch(async () => {
-              // Fallback if RPC doesn't exist (not defined in migration but good practice to handle, using raw update instead)
-              const { data: current } = await supabase
-                .from('proposal_credits')
-                .select('extra_available')
-                .eq('user_id', userId)
-                .single()
-              const newTotal = (current?.extra_available || 0) + creditsToAdd
-              await supabase.from('proposal_credits').upsert({
-                user_id: userId,
-                extra_available: newTotal,
-                updated_at: new Date().toISOString(),
-              })
-            })
+            },
+          )
+
+          if (rpcError) {
+            console.error('Failed to increment credits via RPC', rpcError)
+            throw rpcError
+          }
 
           // Record payment
           await supabase.from('payments').insert({
@@ -74,13 +67,10 @@ Deno.serve(async (req) => {
             gateway_payment_id: session.payment_intent as string,
           })
         } else if (session.mode === 'subscription') {
-          // Initial subscription setup usually
           const subscriptionId = session.subscription as string
           const plan = metadata.plan as string
 
           if (plan && PLAN_LIMITS[plan]) {
-            // We can insert/update subscription here, but often invoice.paid handles it too.
-            // Let's ensure subscription record exists.
             const subscription =
               await stripe.subscriptions.retrieve(subscriptionId)
 
@@ -119,9 +109,8 @@ Deno.serve(async (req) => {
         const invoice = event.data.object
         const subscriptionId = invoice.subscription as string
 
-        if (!subscriptionId) break // Not a subscription invoice
+        if (!subscriptionId) break
 
-        // Find the subscription in our DB to get the User ID and Plan
         const { data: subData, error: subError } = await supabase
           .from('subscriptions')
           .select('user_id, plan')
@@ -130,15 +119,12 @@ Deno.serve(async (req) => {
 
         if (subError || !subData) {
           console.error('Subscription not found for invoice', subscriptionId)
-          // Attempt to recover if subscription was just created in checkout.session.completed but race condition?
-          // Or maybe we can fetch from Stripe if needed.
           break
         }
 
         const userId = subData.user_id
         const plan = subData.plan
 
-        // Update subscription dates
         const stripeSub = await stripe.subscriptions.retrieve(subscriptionId)
 
         await supabase
@@ -155,7 +141,7 @@ Deno.serve(async (req) => {
           })
           .eq('gateway_subscription_id', subscriptionId)
 
-        // Reset monthly usage and ensure limit is correct
+        // Reset monthly usage and ensure limit is correct upon renewal
         if (PLAN_LIMITS[plan]) {
           await supabase
             .from('proposal_credits')
@@ -167,7 +153,6 @@ Deno.serve(async (req) => {
             .eq('user_id', userId)
         }
 
-        // Record payment
         await supabase.from('payments').insert({
           user_id: userId,
           type: 'subscription',

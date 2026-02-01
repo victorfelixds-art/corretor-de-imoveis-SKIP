@@ -57,3 +57,10 @@ export interface Layout {
   preview_url: string
   active: boolean
 }
+
+export interface CreditUsageLog {
+  id: string
+  user_id: string
+  credit_type: 'monthly' | 'extra'
+  created_at: string
+}
