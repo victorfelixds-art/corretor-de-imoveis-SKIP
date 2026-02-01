@@ -10,7 +10,14 @@ export interface Profile {
 }
 
 export type SubscriptionPlan = 'BASE' | 'PRO' | 'PRO_PLUS'
-export type SubscriptionStatus = 'active' | 'past_due' | 'canceled'
+export type SubscriptionStatus =
+  | 'active'
+  | 'past_due'
+  | 'canceled'
+  | 'incomplete'
+  | 'incomplete_expired'
+  | 'trialing'
+  | 'unpaid'
 
 export interface Subscription {
   id: string
@@ -40,6 +47,7 @@ export interface Payment {
   amount: number
   status: PaymentStatus
   gateway_payment_id: string
+  created_at?: string
 }
 
 export interface Layout {

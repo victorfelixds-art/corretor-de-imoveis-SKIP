@@ -1,48 +1,56 @@
 import { Payment, Subscription } from '@/types'
+import { supabase } from '@/lib/supabase/client'
 
 export const paymentService = {
-  createSubscription: async (
-    userId: string,
-    plan: string,
-  ): Promise<Subscription> => {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        resolve({
-          id: `sub-${Date.now()}`,
-          user_id: userId,
-          plan: plan as any,
-          status: 'active',
-          current_period_start: new Date().toISOString(),
-          current_period_end: new Date(
-            Date.now() + 30 * 24 * 60 * 60 * 1000,
-          ).toISOString(),
-          gateway_subscription_id: `gw-${Date.now()}`,
-        })
-      }, 1000)
+  createSubscriptionCheckout: async (
+    plan: 'BASE' | 'PRO' | 'PRO_PLUS',
+  ): Promise<{ url: string }> => {
+    const { data, error } = await supabase.functions.invoke('create-checkout', {
+      body: {
+        type: 'subscription',
+        plan,
+      },
     })
+
+    if (error) throw error
+    if (data.error) throw new Error(data.error)
+    return data
   },
 
-  buyCredits: async (
-    userId: string,
-    amount: number,
-    cost: number,
-  ): Promise<Payment> => {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        resolve({
-          id: `pay-${Date.now()}`,
-          user_id: userId,
-          type: 'extra',
-          amount: cost,
-          status: 'completed',
-          gateway_payment_id: `gw-pay-${Date.now()}`,
-        })
-      }, 1000)
+  createExtraCreditsCheckout: async (): Promise<{ url: string }> => {
+    const { data, error } = await supabase.functions.invoke('create-checkout', {
+      body: {
+        type: 'extra',
+      },
     })
+
+    if (error) throw error
+    if (data.error) throw new Error(data.error)
+    return data
   },
 
-  handleWebhook: async (payload: any): Promise<boolean> => {
-    console.log('Webhook received', payload)
-    return true
+  getSubscription: async (userId: string): Promise<Subscription | null> => {
+    const { data, error } = await supabase
+      .from('subscriptions')
+      .select('*')
+      .eq('user_id', userId)
+      .in('status', ['active', 'trialing', 'past_due'])
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+
+    if (error) throw error
+    return data
+  },
+
+  getPaymentHistory: async (userId: string): Promise<Payment[]> => {
+    const { data, error } = await supabase
+      .from('payments')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false })
+
+    if (error) throw error
+    return data as Payment[]
   },
 }
