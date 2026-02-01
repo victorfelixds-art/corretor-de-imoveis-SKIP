@@ -7,7 +7,7 @@ import {
   CardDescription,
 } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Plus, FileText, ExternalLink } from 'lucide-react'
+import { Plus, FileText, ExternalLink, Calendar, User } from 'lucide-react'
 import { proposalsService } from '@/services/proposals'
 import useAuthStore from '@/stores/useAuthStore'
 import { Proposal } from '@/types'
@@ -41,41 +41,47 @@ export default function ProposalsPage() {
     return new Intl.NumberFormat('pt-BR', {
       style: 'currency',
       currency: 'BRL',
+      maximumFractionDigits: 0,
     }).format(val)
   }
 
-  const getStatusColor = (status: string) => {
+  const getStatusBadge = (status: string) => {
     switch (status) {
       case 'Aceita':
-        return 'bg-emerald-500 hover:bg-emerald-600'
+        return <Badge variant="success">Aceita</Badge>
       case 'Pediu ajustes':
-        return 'bg-orange-500 hover:bg-orange-600'
+        return <Badge variant="warning">Ajustes</Badge>
       default:
-        return 'bg-slate-500 hover:bg-slate-600'
+        return <Badge variant="default">Gerada</Badge>
     }
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8 max-w-[1600px] mx-auto">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold tracking-tight">Propostas Geradas</h1>
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">Propostas</h1>
+          <p className="text-secondary mt-1">
+            Histórico de documentos gerados.
+          </p>
+        </div>
         <Button onClick={() => navigate('/app/proposals/new')}>
           <Plus className="mr-2 h-4 w-4" /> Nova Proposta
         </Button>
       </div>
 
       {loading ? (
-        <div className="text-center">Carregando...</div>
+        <div className="text-center py-10">Carregando propostas...</div>
       ) : proposals.length === 0 ? (
-        <div className="text-center py-12 border-2 border-dashed rounded-lg">
-          <h3 className="text-lg font-medium text-muted-foreground">
+        <div className="text-center py-20 border-2 border-dashed rounded-xl bg-slate-50/50 dark:bg-slate-900/20">
+          <h3 className="text-lg font-medium text-foreground">
             Nenhuma proposta gerada
           </h3>
-          <p className="text-sm text-muted-foreground mt-2">
+          <p className="text-sm text-secondary mt-2">
             Gere sua primeira proposta profissional agora.
           </p>
           <Button
-            className="mt-4"
+            className="mt-6"
             onClick={() => navigate('/app/proposals/new')}
           >
             Gerar Proposta
@@ -84,51 +90,53 @@ export default function ProposalsPage() {
       ) : (
         <div className="grid gap-4">
           {proposals.map((proposal) => (
-            <Card key={proposal.id}>
-              <CardHeader className="p-4 pb-2">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <CardTitle className="text-lg">
+            <Card
+              key={proposal.id}
+              className="group hover:shadow-md transition-all duration-200 border-l-4 border-l-transparent hover:border-l-primary"
+            >
+              <div className="p-5 flex flex-col md:flex-row gap-6 items-start md:items-center justify-between">
+                <div className="flex items-start gap-4 flex-1">
+                  <div className="h-12 w-12 rounded-lg bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center text-primary shrink-0">
+                    <FileText className="h-6 w-6" />
+                  </div>
+                  <div className="space-y-1">
+                    <h3 className="font-semibold text-lg leading-none">
                       {proposal.property?.name || 'Imóvel indisponível'}
-                    </CardTitle>
-                    <CardDescription>
-                      Cliente: {proposal.client_name}
-                    </CardDescription>
+                    </h3>
+                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground">
+                      <span className="flex items-center gap-1">
+                        <User className="h-3.5 w-3.5" /> {proposal.client_name}
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <Calendar className="h-3.5 w-3.5" />{' '}
+                        {format(new Date(proposal.created_at), 'dd/MM/yyyy')}
+                      </span>
+                    </div>
                   </div>
-                  <Badge className={getStatusColor(proposal.status)}>
-                    {proposal.status}
-                  </Badge>
                 </div>
-              </CardHeader>
-              <CardContent className="p-4 pt-0">
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-2 text-sm">
-                  <div>
-                    <p className="text-muted-foreground text-xs">Valor Final</p>
-                    <p className="font-medium">
+
+                <div className="flex items-center justify-between w-full md:w-auto gap-8">
+                  <div className="text-right hidden md:block">
+                    <div className="text-xs text-muted-foreground uppercase tracking-wider font-medium">
+                      Valor Final
+                    </div>
+                    <div className="font-bold text-lg">
                       {formatCurrency(proposal.final_price)}
-                    </p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-muted-foreground text-xs">Data</p>
-                    <p className="font-medium">
-                      {format(new Date(proposal.created_at), 'dd/MM/yyyy')}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground text-xs">Layout</p>
-                    <p className="font-medium">{proposal.layout_id}</p>
-                  </div>
-                  <div className="flex justify-end items-center">
+
+                  <div className="flex items-center gap-4">
+                    {getStatusBadge(proposal.status)}
                     <Button
-                      variant="outline"
-                      size="sm"
+                      variant="ghost"
+                      size="icon"
                       onClick={() => navigate(`/app/proposals/${proposal.id}`)}
                     >
-                      Ver Detalhes <ExternalLink className="ml-2 h-3 w-3" />
+                      <ExternalLink className="h-4 w-4" />
                     </Button>
                   </div>
                 </div>
-              </CardContent>
+              </div>
             </Card>
           ))}
         </div>

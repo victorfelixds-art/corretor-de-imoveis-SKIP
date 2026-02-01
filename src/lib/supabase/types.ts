@@ -15,6 +15,27 @@ export type Database = {
   }
   public: {
     Tables: {
+      credit_usage_logs: {
+        Row: {
+          created_at: string | null
+          credit_type: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          credit_type: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          credit_type?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       payments: {
         Row: {
           amount: number
@@ -47,6 +68,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          active_layout_id: string | null
           created_at: string
           email: string
           id: string
@@ -55,6 +77,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          active_layout_id?: string | null
           created_at?: string
           email: string
           id: string
@@ -63,12 +86,49 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          active_layout_id?: string | null
           created_at?: string
           email?: string
           id?: string
           name?: string | null
           role?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      properties: {
+        Row: {
+          address: string
+          created_at: string | null
+          features: Json
+          id: string
+          images: string[]
+          name: string
+          price: number
+          sq_meters: number
+          user_id: string
+        }
+        Insert: {
+          address: string
+          created_at?: string | null
+          features?: Json
+          id?: string
+          images?: string[]
+          name: string
+          price: number
+          sq_meters: number
+          user_id: string
+        }
+        Update: {
+          address?: string
+          created_at?: string | null
+          features?: Json
+          id?: string
+          images?: string[]
+          name?: string
+          price?: number
+          sq_meters?: number
+          user_id?: string
         }
         Relationships: []
       }
@@ -95,6 +155,59 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      proposals: {
+        Row: {
+          client_name: string
+          created_at: string | null
+          discount: number | null
+          final_price: number
+          id: string
+          layout_id: string
+          payment_conditions: Json
+          pdf_url: string | null
+          property_id: string | null
+          status: string
+          unit: string | null
+          user_id: string
+        }
+        Insert: {
+          client_name: string
+          created_at?: string | null
+          discount?: number | null
+          final_price: number
+          id?: string
+          layout_id: string
+          payment_conditions?: Json
+          pdf_url?: string | null
+          property_id?: string | null
+          status?: string
+          unit?: string | null
+          user_id: string
+        }
+        Update: {
+          client_name?: string
+          created_at?: string | null
+          discount?: number | null
+          final_price?: number
+          id?: string
+          layout_id?: string
+          payment_conditions?: Json
+          pdf_url?: string | null
+          property_id?: string | null
+          status?: string
+          unit?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'proposals_property_id_fkey'
+            columns: ['property_id']
+            isOneToOne: false
+            referencedRelation: 'properties'
+            referencedColumns: ['id']
+          },
+        ]
       }
       subscriptions: {
         Row: {
@@ -137,6 +250,11 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      consume_credit: { Args: never; Returns: string }
+      increment_extra_credits: {
+        Args: { amount: number; user_uuid: string }
+        Returns: undefined
+      }
       is_admin: { Args: never; Returns: boolean }
     }
     Enums: {

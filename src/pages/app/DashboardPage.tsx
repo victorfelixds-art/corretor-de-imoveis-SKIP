@@ -6,7 +6,14 @@ import {
   CardTitle,
   CardDescription,
 } from '@/components/ui/card'
-import { FileText, CheckCircle, Clock, AlertCircle } from 'lucide-react'
+import {
+  FileText,
+  CheckCircle,
+  Clock,
+  AlertCircle,
+  TrendingUp,
+  Plus,
+} from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { proposalsService } from '@/services/proposals'
 import useAuthStore from '@/stores/useAuthStore'
@@ -21,7 +28,7 @@ import {
 import { useNavigate } from 'react-router-dom'
 import { isSameMonth, parseISO } from 'date-fns'
 import { cn } from '@/lib/utils'
-import { useSidebar } from '@/components/ui/sidebar'
+import { Badge } from '@/components/ui/badge'
 
 export default function DashboardPage() {
   const { user } = useAuthStore()
@@ -29,7 +36,6 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true)
   const [dateFilter, setDateFilter] = useState('this-month')
   const navigate = useNavigate()
-  const { isMobile } = useSidebar()
 
   useEffect(() => {
     if (user) {
@@ -72,98 +78,120 @@ export default function DashboardPage() {
   const probableValue = filteredProposals
     .filter((p) => p.status === 'Aceita')
     .reduce((sum, p) => sum + Number(p.final_price), 0)
-  const conversionRate =
-    generatedCount > 0 ? (acceptedCount / generatedCount) * 100 : 0
 
   const formatCurrency = (val: number) => {
     return new Intl.NumberFormat('pt-BR', {
       style: 'currency',
       currency: 'BRL',
+      maximumFractionDigits: 0,
     }).format(val)
   }
 
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'Aceita':
+        return <Badge variant="success">Aceita</Badge>
+      case 'Pediu ajustes':
+        return <Badge variant="warning">Ajustes</Badge>
+      default:
+        return <Badge variant="default">Gerada</Badge>
+    }
+  }
+
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8 max-w-[1600px] mx-auto">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <h1 className="text-2xl font-bold tracking-tight text-primary">
-          Visão Geral
-        </h1>
-        <div className="flex items-center gap-2">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight text-foreground">
+            Visão Geral
+          </h1>
+          <p className="text-secondary mt-1">
+            Acompanhe o desempenho das suas propostas.
+          </p>
+        </div>
+        <div className="flex flex-wrap items-center gap-3">
           <Select value={dateFilter} onValueChange={setDateFilter}>
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Selecione o período" />
+            <SelectTrigger className="w-[160px] bg-card">
+              <SelectValue placeholder="Período" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="this-month">Esse mês</SelectItem>
               <SelectItem value="all-time">Todo o período</SelectItem>
             </SelectContent>
           </Select>
-          <Button onClick={() => navigate('/app/proposals/new')}>
-            Nova Proposta
+          <Button
+            onClick={() => navigate('/app/proposals/new')}
+            className="shadow-lg shadow-blue-500/20"
+          >
+            <Plus className="mr-2 h-4 w-4" /> Nova Proposta
           </Button>
         </div>
       </div>
 
-      <div className="grid gap-4 grid-cols-2 lg:grid-cols-5">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-4">
-            <CardTitle className="text-sm font-medium">
-              {isMobile ? 'Geradas' : 'Propostas Geradas'}
+      <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-5">
+        <Card className="hover:shadow-md transition-shadow">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Propostas Geradas
             </CardTitle>
-            <FileText className="h-4 w-4 text-muted-foreground" />
+            <FileText className="h-4 w-4 text-primary" />
           </CardHeader>
-          <CardContent className="p-4 pt-0">
+          <CardContent>
             <div className="text-2xl font-bold">{generatedCount}</div>
           </CardContent>
         </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-4">
-            <CardTitle className="text-sm font-medium">
-              {isMobile ? 'P. Ajustes' : 'Pediu Ajustes'}
+        <Card className="hover:shadow-md transition-shadow">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Pediu Ajustes
             </CardTitle>
-            <Clock className="h-4 w-4 text-orange-500" />
+            <Clock className="h-4 w-4 text-[hsl(38,92%,50%)]" />
           </CardHeader>
-          <CardContent className="p-4 pt-0">
-            <div className="text-2xl font-bold text-orange-600">
+          <CardContent>
+            <div className="text-2xl font-bold text-[hsl(38,92%,50%)]">
               {adjustmentCount}
             </div>
           </CardContent>
         </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-4">
-            <CardTitle className="text-sm font-medium">
-              {isMobile ? 'Aceitas' : 'Propostas Aceitas'}
+        <Card className="hover:shadow-md transition-shadow">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Propostas Aceitas
             </CardTitle>
-            <CheckCircle className="h-4 w-4 text-emerald-500" />
+            <CheckCircle className="h-4 w-4 text-[hsl(160,84%,39%)]" />
           </CardHeader>
-          <CardContent className="p-4 pt-0">
-            <div className="text-2xl font-bold text-emerald-600">
-              {conversionRate.toFixed(1)}%
+          <CardContent>
+            <div className="text-2xl font-bold text-[hsl(160,84%,39%)]">
+              {acceptedCount}
             </div>
           </CardContent>
         </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-4">
-            <CardTitle className="text-sm font-medium">Possível</CardTitle>
-            <AlertCircle className="h-4 w-4 text-blue-500" />
+        <Card className="hover:shadow-md transition-shadow">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Valor Possível
+            </CardTitle>
+            <AlertCircle className="h-4 w-4 text-blue-400" />
           </CardHeader>
-          <CardContent className="p-4 pt-0">
+          <CardContent>
             <div
-              className="text-lg font-bold text-blue-600 truncate"
+              className="text-xl font-bold text-foreground truncate"
               title={formatCurrency(possibleValue)}
             >
               {formatCurrency(possibleValue)}
             </div>
           </CardContent>
         </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-4">
-            <CardTitle className="text-sm font-medium">Provável</CardTitle>
-            <CheckCircle className="h-4 w-4 text-green-700" />
+        <Card className="hover:shadow-md transition-shadow">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Valor Provável
+            </CardTitle>
+            <TrendingUp className="h-4 w-4 text-emerald-600" />
           </CardHeader>
-          <CardContent className="p-4 pt-0">
+          <CardContent>
             <div
-              className="text-lg font-bold text-green-700 truncate"
+              className="text-xl font-bold text-emerald-600 truncate"
               title={formatCurrency(probableValue)}
             >
               {formatCurrency(probableValue)}
@@ -172,91 +200,104 @@ export default function DashboardPage() {
         </Card>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-        <Card className="col-span-4 lg:col-span-5">
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <Card className="col-span-1 lg:col-span-2 hover:shadow-md transition-shadow">
           <CardHeader>
             <CardTitle>Propostas Recentes</CardTitle>
             <CardDescription>
               {filteredProposals.length === 0
-                ? 'Nenhuma proposta encontrada neste período.'
-                : `Últimas ${Math.min(5, filteredProposals.length)} propostas.`}
+                ? 'Nenhuma atividade recente.'
+                : `Últimas movimentações.`}
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
+            <div className="space-y-6">
               {filteredProposals.slice(0, 5).map((p) => (
                 <div
                   key={p.id}
-                  className="flex items-center justify-between border-b pb-2 last:border-0 last:pb-0"
+                  className="flex items-center justify-between group"
                 >
                   <div className="flex items-center gap-4">
                     <div
                       className={cn(
-                        'flex size-9 items-center justify-center rounded-full',
+                        'flex size-10 items-center justify-center rounded-lg transition-colors',
                         p.status === 'Aceita'
-                          ? 'bg-emerald-100 text-emerald-600'
+                          ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30'
                           : p.status === 'Pediu ajustes'
-                            ? 'bg-orange-100 text-orange-600'
-                            : 'bg-slate-100 text-slate-500',
+                            ? 'bg-amber-100 text-amber-600 dark:bg-amber-900/30'
+                            : 'bg-blue-50 text-blue-600 dark:bg-blue-900/30',
                       )}
                     >
-                      <FileText className="size-4" />
+                      <FileText className="size-5" />
                     </div>
                     <div className="space-y-1">
-                      <p className="text-sm font-medium leading-none">
+                      <p
+                        className="text-sm font-medium leading-none text-foreground group-hover:text-primary transition-colors cursor-pointer"
+                        onClick={() => navigate(`/app/proposals/${p.id}`)}
+                      >
                         {p.property?.name || 'Imóvel Excluído'}
                       </p>
                       <p className="text-xs text-muted-foreground">
-                        {p.client_name} -{' '}
+                        {p.client_name} •{' '}
                         {formatCurrency(Number(p.final_price))}
                       </p>
                     </div>
                   </div>
-                  <div className="text-right">
-                    <span
-                      className={cn(
-                        'text-xs px-2 py-1 rounded-full font-medium',
-                        p.status === 'Aceita'
-                          ? 'bg-emerald-100 text-emerald-800'
-                          : p.status === 'Pediu ajustes'
-                            ? 'bg-orange-100 text-orange-800'
-                            : 'bg-slate-100 text-slate-800',
-                      )}
-                    >
-                      {p.status}
-                    </span>
-                  </div>
+                  <div className="text-right">{getStatusBadge(p.status)}</div>
                 </div>
               ))}
+              {filteredProposals.length === 0 && (
+                <div className="flex flex-col items-center justify-center py-8 text-center">
+                  <div className="bg-muted/50 rounded-full p-3 mb-3">
+                    <FileText className="h-6 w-6 text-muted-foreground" />
+                  </div>
+                  <p className="text-sm font-medium text-foreground">
+                    Nenhuma proposta encontrada
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1 max-w-[200px]">
+                    Crie sua primeira proposta para visualizar aqui.
+                  </p>
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
 
-        <Card className="col-span-3 lg:col-span-2">
+        <Card className="hover:shadow-md transition-shadow">
           <CardHeader>
             <CardTitle>Ações Rápidas</CardTitle>
+            <CardDescription>Atalhos para suas tarefas</CardDescription>
           </CardHeader>
-          <CardContent className="grid gap-2">
+          <CardContent className="grid gap-3">
             <Button
-              variant="outline"
-              className="w-full justify-start"
+              variant="secondary"
+              className="w-full justify-start h-12 text-left font-normal"
               onClick={() => navigate('/app/properties/new')}
             >
-              <FileText className="mr-2 size-4" /> Cadastrar Imóvel
+              <div className="bg-blue-100 dark:bg-blue-900/30 p-1.5 rounded mr-3 text-blue-600">
+                <Building2 className="size-4" />
+              </div>
+              Cadastrar Imóvel
             </Button>
             <Button
-              variant="outline"
-              className="w-full justify-start"
+              variant="secondary"
+              className="w-full justify-start h-12 text-left font-normal"
               onClick={() => navigate('/app/proposals/new')}
             >
-              <FileText className="mr-2 size-4" /> Gerar Proposta
+              <div className="bg-emerald-100 dark:bg-emerald-900/30 p-1.5 rounded mr-3 text-emerald-600">
+                <FileText className="size-4" />
+              </div>
+              Nova Proposta
             </Button>
             <Button
-              variant="outline"
-              className="w-full justify-start"
+              variant="secondary"
+              className="w-full justify-start h-12 text-left font-normal"
               onClick={() => navigate('/app/library')}
             >
-              <FileText className="mr-2 size-4" /> Ver Biblioteca
+              <div className="bg-purple-100 dark:bg-purple-900/30 p-1.5 rounded mr-3 text-purple-600">
+                <Library className="size-4" />
+              </div>
+              Biblioteca de Layouts
             </Button>
           </CardContent>
         </Card>
@@ -264,3 +305,6 @@ export default function DashboardPage() {
     </div>
   )
 }
+
+// Icon import helper
+import { Building2, Library } from 'lucide-react'

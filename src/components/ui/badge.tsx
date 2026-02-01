@@ -1,4 +1,4 @@
-/* Badge Component primitives - A component that displays a badge - from shadcn/ui (exposes Badge, badgeVariants) */
+/* Badge Component - With updated status variants */
 import * as React from 'react'
 import { cva, type VariantProps } from 'class-variance-authority'
 
@@ -10,12 +10,16 @@ const badgeVariants = cva(
     variants: {
       variant: {
         default:
-          'border-transparent bg-primary text-primary-foreground hover:bg-primary/80',
+          'border-transparent bg-primary text-primary-foreground hover:bg-primary/80', // Blue (Gerada)
         secondary:
           'border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80',
         destructive:
           'border-transparent bg-destructive text-destructive-foreground hover:bg-destructive/80',
         outline: 'text-foreground',
+        success:
+          'border-transparent bg-[hsl(160,84%,39%)] text-white hover:bg-[hsl(160,84%,39%)]/80', // Green (Aceita)
+        warning:
+          'border-transparent bg-[hsl(38,92%,50%)] text-white hover:bg-[hsl(38,92%,50%)]/80', // Yellow (Pediu ajustes)
       },
     },
     defaultVariants: {
