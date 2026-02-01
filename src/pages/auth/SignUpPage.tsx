@@ -21,73 +21,73 @@ import {
 } from '@/components/ui/form'
 import useAuthStore from '@/stores/useAuthStore'
 import { Link, useNavigate } from 'react-router-dom'
-import { useEffect } from 'react'
 import { useToast } from '@/hooks/use-toast'
 
-const loginSchema = z.object({
+const signUpSchema = z.object({
+  name: z.string().min(3, { message: 'Nome deve ter pelo menos 3 caracteres' }),
   email: z.string().email({ message: 'Digite um email válido' }),
-  password: z.string().min(1, { message: 'Digite sua senha' }),
+  password: z
+    .string()
+    .min(6, { message: 'Senha deve ter pelo menos 6 caracteres' }),
 })
 
-type LoginFormValues = z.infer<typeof loginSchema>
+type SignUpFormValues = z.infer<typeof signUpSchema>
 
-export default function Index() {
-  const { login, user, isLoading } = useAuthStore()
+export default function SignUpPage() {
+  const { signUp } = useAuthStore()
   const navigate = useNavigate()
   const { toast } = useToast()
 
-  const form = useForm<LoginFormValues>({
-    resolver: zodResolver(loginSchema),
+  const form = useForm<SignUpFormValues>({
+    resolver: zodResolver(signUpSchema),
     defaultValues: {
+      name: '',
       email: '',
       password: '',
     },
   })
 
-  // Role-based redirect logic
-  useEffect(() => {
-    if (user) {
-      if (user.role === 'admin') navigate('/admin')
-      else navigate('/app')
-    }
-  }, [user, navigate])
-
-  const onSubmit = async (data: LoginFormValues) => {
+  const onSubmit = async (data: SignUpFormValues) => {
     try {
-      await login(data.email, data.password)
+      await signUp(data.name, data.email, data.password)
       toast({
-        title: 'Login realizado com sucesso',
-        description: 'Redirecionando...',
+        title: 'Conta criada com sucesso!',
+        description: 'Bem-vindo ao PDFCorretor.',
       })
-      // Navigation is handled by useEffect
+      navigate('/app')
     } catch (error) {
       toast({
         variant: 'destructive',
-        title: 'Erro ao entrar',
-        description: 'Verifique suas credenciais e tente novamente.',
+        title: 'Erro ao criar conta',
+        description: 'Tente novamente mais tarde.',
       })
     }
-  }
-
-  if (isLoading && user) {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        Redirecionando...
-      </div>
-    )
   }
 
   return (
     <Card className="w-full shadow-lg border-muted/60">
       <CardHeader className="space-y-1">
-        <CardTitle className="text-2xl text-center">Entrar na conta</CardTitle>
+        <CardTitle className="text-2xl text-center">Criar conta</CardTitle>
         <CardDescription className="text-center">
-          Digite seu e-mail e senha para acessar
+          Comece a gerar propostas profissionais hoje mesmo
         </CardDescription>
       </CardHeader>
       <CardContent>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <FormField
+              control={form.control}
+              name="name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Nome Completo</FormLabel>
+                  <FormControl>
+                    <Input placeholder="João da Silva" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
             <FormField
               control={form.control}
               name="email"
@@ -106,15 +106,7 @@ export default function Index() {
               name="password"
               render={({ field }) => (
                 <FormItem>
-                  <div className="flex items-center justify-between">
-                    <FormLabel>Senha</FormLabel>
-                    <Link
-                      to="/auth/recovery"
-                      className="text-xs font-medium text-primary hover:underline"
-                    >
-                      Esqueceu a senha?
-                    </Link>
-                  </div>
+                  <FormLabel>Senha</FormLabel>
                   <FormControl>
                     <Input type="password" placeholder="••••••••" {...field} />
                   </FormControl>
@@ -127,24 +119,17 @@ export default function Index() {
               className="w-full"
               disabled={form.formState.isSubmitting}
             >
-              {form.formState.isSubmitting ? 'Entrando...' : 'Entrar'}
+              {form.formState.isSubmitting ? 'Criando conta...' : 'Criar Conta'}
             </Button>
           </form>
         </Form>
       </CardContent>
-      <CardFooter className="flex flex-col space-y-2 text-center text-sm text-muted-foreground">
+      <CardFooter className="flex justify-center text-sm text-muted-foreground">
         <div>
-          Não tem uma conta?{' '}
-          <Link
-            to="/auth/signup"
-            className="font-medium text-primary hover:underline"
-          >
-            Criar conta
+          Já tem uma conta?{' '}
+          <Link to="/" className="font-medium text-primary hover:underline">
+            Fazer login
           </Link>
-        </div>
-        <div className="text-xs text-muted-foreground/60">
-          Tente: <strong>corretor@example.com</strong> ou{' '}
-          <strong>admin@example.com</strong>
         </div>
       </CardFooter>
     </Card>
