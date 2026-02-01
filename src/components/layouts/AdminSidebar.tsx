@@ -6,6 +6,7 @@ import {
   CreditCard,
   LogOut,
   ShieldCheck,
+  FileText,
 } from 'lucide-react'
 import {
   Sidebar,
@@ -20,7 +21,7 @@ import {
   SidebarMenuItem,
 } from '@/components/ui/sidebar'
 import useAuthStore from '@/stores/useAuthStore'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 
 export function AdminSidebar() {
   const { user, logout } = useAuthStore()
@@ -59,42 +60,50 @@ export function AdminSidebar() {
             <SidebarMenu>
               <SidebarMenuItem>
                 <SidebarMenuButton asChild tooltip="Dashboard">
-                  <a href="/admin">
+                  <Link to="/admin">
                     <Home />
                     <span>Visão Geral</span>
-                  </a>
+                  </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
                 <SidebarMenuButton asChild tooltip="Usuários">
-                  <a href="/admin/users">
+                  <Link to="/admin/users">
                     <Users />
                     <span>Usuários</span>
-                  </a>
+                  </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <SidebarMenuButton asChild tooltip="Planos">
-                  <a href="/admin/plans">
+                <SidebarMenuButton asChild tooltip="Planos & Créditos">
+                  <Link to="/admin/plans">
                     <CreditCard />
-                    <span>Planos e Assinaturas</span>
-                  </a>
+                    <span>Planos & Créditos</span>
+                  </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
                 <SidebarMenuButton asChild tooltip="Layouts">
-                  <a href="/admin/layouts">
+                  <Link to="/admin/layouts">
                     <Palette />
                     <span>Layouts PDF</span>
-                  </a>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild tooltip="Propostas">
+                  <Link to="/admin/proposals">
+                    <FileText />
+                    <span>Propostas</span>
+                  </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
                 <SidebarMenuButton asChild tooltip="Configurações">
-                  <a href="/admin/settings">
+                  <Link to="/admin/settings">
                     <Settings />
                     <span>Configurações</span>
-                  </a>
+                  </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             </SidebarMenu>

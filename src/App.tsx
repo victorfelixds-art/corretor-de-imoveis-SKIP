@@ -8,8 +8,15 @@ import Index from './pages/Index'
 import SignUpPage from './pages/auth/SignUpPage'
 import RecoveryPage from './pages/auth/RecoveryPage'
 import DashboardPage from './pages/app/DashboardPage'
-import AdminDashboardPage from './pages/admin/AdminDashboardPage'
 import NotFound from './pages/NotFound'
+
+// Admin Pages
+import AdminDashboardPage from './pages/admin/AdminDashboardPage'
+import AdminUsersPage from './pages/admin/users/AdminUsersPage'
+import AdminPlansPage from './pages/admin/plans/AdminPlansPage'
+import AdminLayoutsPage from './pages/admin/layouts/AdminLayoutsPage'
+import AdminProposalsPage from './pages/admin/proposals/AdminProposalsPage'
+import AdminSettingsPage from './pages/admin/settings/AdminSettingsPage'
 
 // New Pages
 import PropertiesPage from './pages/app/properties/PropertiesPage'
@@ -71,22 +78,11 @@ const App = () => (
           {/* Admin Routes */}
           <Route path="/admin" element={<AdminLayout />}>
             <Route index element={<AdminDashboardPage />} />
-            <Route
-              path="users"
-              element={<div className="p-4">Gerenciar Usuários (Em Breve)</div>}
-            />
-            <Route
-              path="plans"
-              element={<div className="p-4">Gerenciar Planos (Em Breve)</div>}
-            />
-            <Route
-              path="layouts"
-              element={<div className="p-4">Gerenciar Layouts (Em Breve)</div>}
-            />
-            <Route
-              path="settings"
-              element={<div className="p-4">Configurações (Em Breve)</div>}
-            />
+            <Route path="users" element={<AdminUsersPage />} />
+            <Route path="plans" element={<AdminPlansPage />} />
+            <Route path="layouts" element={<AdminLayoutsPage />} />
+            <Route path="proposals" element={<AdminProposalsPage />} />
+            <Route path="settings" element={<AdminSettingsPage />} />
           </Route>
 
           <Route path="*" element={<NotFound />} />

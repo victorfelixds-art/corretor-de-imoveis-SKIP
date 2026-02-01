@@ -57,9 +57,12 @@ export interface Payment {
 export interface Layout {
   id: string
   name: string
-  is_pro: boolean
+  category: 'BASE' | 'PRO' | 'PRO_PLUS'
   preview_url: string
   description?: string
+  gamma_template_id?: string
+  is_active: boolean
+  is_pro?: boolean // Legacy support for UI logic
 }
 
 export interface CreditUsageLog {
@@ -100,4 +103,21 @@ export interface Proposal {
   pdf_url: string | null
   created_at: string
   property?: Property
+}
+
+export interface AdminSetting {
+  key: string
+  value: string
+  label: string
+  description: string
+}
+
+export interface AdminLog {
+  id: string
+  admin_id: string
+  action_type: string
+  description: string
+  target_id?: string
+  details?: any
+  created_at: string
 }

@@ -55,6 +55,23 @@ Deno.serve(async (req) => {
 
     if (profileError || !profile) throw new Error('Profile not found')
 
+    // Fetch Global Settings
+    const { data: settings } = await supabaseAdmin
+      .from('admin_settings')
+      .select('*')
+
+    const settingMap = (settings || []).reduce((acc: any, curr: any) => {
+      acc[curr.key] = curr.value
+      return acc
+    }, {})
+
+    // Fetch Layout
+    const { data: layout } = await supabaseAdmin
+      .from('layouts')
+      .select('*')
+      .eq('id', proposal.layout_id)
+      .single()
+
     // 3. Consume Credit (Transactional Start)
     const { data: creditType, error: creditError } =
       await supabaseClient.rpc('consume_credit')
@@ -89,7 +106,7 @@ Deno.serve(async (req) => {
       const adjustmentsLink = `${appUrl}/p/${proposal.id}/request_changes`
 
       const payload = {
-        template_id: proposal.layout_id,
+        template_id: layout?.gamma_template_id || 'default', // Use DB template ID
         data: {
           CORRETOR: {
             NOME: profile.name || 'Corretor',
@@ -156,6 +173,10 @@ Deno.serve(async (req) => {
             PAGAMENTO4: paymentConditions[3] || '',
             PAGAMENTO5: paymentConditions[4] || '',
             PAGAMENTO6: paymentConditions[5] || '',
+          },
+          CONFIG: {
+            MSG_ACCEPT: settingMap['msg_accept'] || 'Aceitar',
+            MSG_ADJUST: settingMap['msg_adjust'] || 'Ajustar',
           },
         },
       }

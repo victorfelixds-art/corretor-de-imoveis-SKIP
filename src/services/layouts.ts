@@ -1,43 +1,36 @@
 import { Layout } from '@/types'
 import { supabase } from '@/lib/supabase/client'
 
-export const AVAILABLE_LAYOUTS: Layout[] = [
-  {
-    id: 'layout-base-1',
-    name: 'Layout Clássico',
-    is_pro: false,
-    preview_url:
-      'https://img.usecurling.com/p/300/400?q=document%20minimal&color=blue',
-    description: 'Um layout limpo e direto para propostas rápidas.',
-  },
-  {
-    id: 'layout-base-2',
-    name: 'Layout Moderno',
-    is_pro: false,
-    preview_url:
-      'https://img.usecurling.com/p/300/400?q=document%20modern&color=gray',
-    description: 'Estilo contemporâneo com foco em tipografia.',
-  },
-  {
-    id: 'layout-pro-1',
-    name: 'Layout Premium Gold',
-    is_pro: true,
-    preview_url:
-      'https://img.usecurling.com/p/300/400?q=luxury%20document&color=yellow',
-    description: 'Acabamento sofisticado para imóveis de alto padrão.',
-  },
-  {
-    id: 'layout-pro-2',
-    name: 'Layout Dark Mode',
-    is_pro: true,
-    preview_url:
-      'https://img.usecurling.com/p/300/400?q=dark%20ui%20document&color=black',
-    description: 'Visual impactante com fundo escuro.',
-  },
-]
-
 export const layoutsService = {
-  getLayouts: () => AVAILABLE_LAYOUTS,
+  getLayouts: async () => {
+    const { data, error } = await supabase
+      .from('layouts')
+      .select('*')
+      .order('name')
+
+    if (error) throw error
+
+    // Map DB fields to UI expected fields
+    return data.map((l: any) => ({
+      ...l,
+      is_pro: l.category !== 'BASE',
+    })) as Layout[]
+  },
+
+  getActiveLayouts: async () => {
+    const { data, error } = await supabase
+      .from('layouts')
+      .select('*')
+      .eq('is_active', true)
+      .order('name')
+
+    if (error) throw error
+
+    return data.map((l: any) => ({
+      ...l,
+      is_pro: l.category !== 'BASE',
+    })) as Layout[]
+  },
 
   setActiveLayout: async (userId: string, layoutId: string) => {
     const { error } = await supabase
@@ -47,4 +40,45 @@ export const layoutsService = {
 
     if (error) throw error
   },
+
+  // Admin Methods
+  createLayout: async (
+    layout: Omit<Layout, 'id' | 'created_at' | 'is_pro'>,
+  ) => {
+    const { data, error } = await supabase
+      .from('layouts')
+      .insert({
+        id: layout.id || `layout-${Date.now()}`,
+        name: layout.name,
+        description: layout.description,
+        preview_url: layout.preview_url,
+        category: layout.category,
+        gamma_template_id: layout.gamma_template_id,
+        is_active: layout.is_active,
+      })
+      .select()
+      .single()
+
+    if (error) throw error
+    return data
+  },
+
+  updateLayout: async (id: string, updates: Partial<Layout>) => {
+    const { error } = await supabase
+      .from('layouts')
+      .update({
+        name: updates.name,
+        description: updates.description,
+        preview_url: updates.preview_url,
+        category: updates.category,
+        gamma_template_id: updates.gamma_template_id,
+        is_active: updates.is_active,
+      })
+      .eq('id', id)
+
+    if (error) throw error
+  },
 }
+
+// Fallback constant for types if needed elsewhere, but mostly deprecated
+export const AVAILABLE_LAYOUTS: Layout[] = []
