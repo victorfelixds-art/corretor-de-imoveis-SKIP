@@ -24,19 +24,39 @@ export const proposalsService = {
     } = await supabase.auth.getUser()
     if (!user) throw new Error('User not found')
 
-    const { data, error } = await supabase
+    // 1. Create Draft Proposal (no PDF yet)
+    const { data: draft, error: insertError } = await supabase
       .from('proposals')
       .insert({
         ...proposal,
         user_id: user.id,
-        status: 'Gerada',
-        pdf_url: 'https://placehold.co/600x400/EEE/31343C?text=PDF+Preview', // Placeholder
+        status: 'Gerada', // Initially "Gerada" but waiting for PDF
+        pdf_url: null,
       })
       .select()
       .single()
 
-    if (error) throw error
-    return data as Proposal
+    if (insertError) throw insertError
+
+    // 2. Call Edge Function to Consume Credit & Generate PDF
+    // This is a transactional process handled by the backend
+    const { data: generationData, error: generationError } =
+      await supabase.functions.invoke('generate-pdf', {
+        body: { proposal_id: draft.id },
+      })
+
+    if (generationError) {
+      // If generation fails (e.g. no credits), we should probably let the user know
+      // The proposal exists as draft/failed.
+      // For now, we propagate the error so the UI shows it.
+      throw new Error(generationError.message || 'Erro na geração do PDF')
+    }
+
+    // 3. Return updated proposal
+    return {
+      ...draft,
+      pdf_url: generationData.pdf_url,
+    } as Proposal
   },
 
   getById: async (id: string) => {

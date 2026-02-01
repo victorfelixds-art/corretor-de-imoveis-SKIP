@@ -6,6 +6,9 @@ export interface Profile {
   email: string
   role: Role
   active_layout_id?: string
+  creci?: string
+  phone?: string
+  avatar_url?: string
   created_at: string
   updated_at: string
 }

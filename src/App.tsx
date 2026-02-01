@@ -21,6 +21,7 @@ import LibraryPage from './pages/app/library/LibraryPage'
 import PlansPage from './pages/app/plans/PlansPage'
 import SupportPage from './pages/app/support/SupportPage'
 import ProfilePage from './pages/app/profile/ProfilePage'
+import ProposalActionPage from './pages/public/ProposalActionPage'
 
 import AuthLayout from './components/layouts/AuthLayout'
 import AppLayout from './components/layouts/AppLayout'
@@ -41,6 +42,9 @@ const App = () => (
             <Route path="/auth/signup" element={<SignUpPage />} />
             <Route path="/auth/recovery" element={<RecoveryPage />} />
           </Route>
+
+          {/* Public Action Routes (No Layout) */}
+          <Route path="/p/:id/:action" element={<ProposalActionPage />} />
 
           {/* Corretor Routes */}
           <Route path="/app" element={<AppLayout />}>
