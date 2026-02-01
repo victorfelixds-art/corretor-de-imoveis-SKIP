@@ -1677,6 +1677,10 @@ body{
   background-color: hsl(var(--primary));
 }
 
+.bg-primary\/10{
+  background-color: hsl(var(--primary) / 0.1);
+}
+
 .bg-secondary{
   background-color: hsl(var(--secondary));
 }
@@ -2026,10 +2030,6 @@ body{
 
 .text-muted-foreground{
   color: hsl(var(--muted-foreground));
-}
-
-.text-muted-foreground\/60{
-  color: hsl(var(--muted-foreground) / 0.6);
 }
 
 .text-popover-foreground{

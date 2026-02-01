@@ -24,7 +24,8 @@ export default function AppLayout() {
     return <Navigate to="/" state={{ from: location }} replace />
   }
 
-  if (user.role !== 'corretor') {
+  // Redirect Admins to Admin Panel
+  if (user.role === 'admin') {
     return <Navigate to="/admin" replace />
   }
 
@@ -36,7 +37,7 @@ export default function AppLayout() {
           <SidebarTrigger className="-ml-1" />
           <Separator orientation="vertical" className="mr-2 h-4" />
           <div className="flex items-center gap-2 text-sm font-medium">
-            <span>Bem-vindo, {user.name}</span>
+            <span>Bem-vindo, {user.name || user.email}</span>
           </div>
         </header>
         <main className="flex-1 overflow-auto p-4 md:p-6 bg-slate-50/50 dark:bg-slate-900/50">

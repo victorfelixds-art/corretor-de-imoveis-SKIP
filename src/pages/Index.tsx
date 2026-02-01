@@ -46,11 +46,11 @@ export default function Index() {
 
   // Role-based redirect logic
   useEffect(() => {
-    if (user) {
+    if (!isLoading && user) {
       if (user.role === 'admin') navigate('/admin')
       else navigate('/app')
     }
-  }, [user, navigate])
+  }, [user, isLoading, navigate])
 
   const onSubmit = async (data: LoginFormValues) => {
     try {
@@ -60,16 +60,27 @@ export default function Index() {
         description: 'Redirecionando...',
       })
       // Navigation is handled by useEffect
-    } catch (error) {
+    } catch (error: any) {
+      console.error(error)
       toast({
         variant: 'destructive',
         title: 'Erro ao entrar',
-        description: 'Verifique suas credenciais e tente novamente.',
+        description:
+          error.message || 'Verifique suas credenciais e tente novamente.',
       })
     }
   }
 
-  if (isLoading && user) {
+  if (isLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        Carregando...
+      </div>
+    )
+  }
+
+  // If user is already logged in, show simple loading state while redirect happens
+  if (user) {
     return (
       <div className="flex min-h-screen items-center justify-center">
         Redirecionando...
@@ -141,10 +152,6 @@ export default function Index() {
           >
             Criar conta
           </Link>
-        </div>
-        <div className="text-xs text-muted-foreground/60">
-          Tente: <strong>corretor@example.com</strong> ou{' '}
-          <strong>admin@example.com</strong>
         </div>
       </CardFooter>
     </Card>

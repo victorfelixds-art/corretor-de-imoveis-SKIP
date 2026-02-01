@@ -7,9 +7,12 @@ import {
 } from 'react'
 import { Profile } from '@/types'
 import { authService } from '@/services/auth'
+import { supabase } from '@/lib/supabase/client'
+import { Session } from '@supabase/supabase-js'
 
 interface AuthContextType {
   user: Profile | null
+  session: Session | null
   isAuthenticated: boolean
   isLoading: boolean
   login: (email: string, password?: string) => Promise<void>
@@ -21,37 +24,76 @@ const AuthContext = createContext<AuthContextType | null>(null)
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<Profile | null>(null)
+  const [session, setSession] = useState<Session | null>(null)
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    // Check local storage for session
-    const storedUser = localStorage.getItem('pdfcorretor_user')
-    if (storedUser) {
-      setUser(JSON.parse(storedUser))
+    let mounted = true
+
+    // Function to handle session updates
+    const handleSession = async (currentSession: Session | null) => {
+      if (!mounted) return
+
+      setSession(currentSession)
+
+      if (currentSession?.user) {
+        try {
+          const profile = await authService.getProfile(currentSession.user.id)
+          if (mounted) {
+            setUser(profile)
+          }
+        } catch (error) {
+          console.error('Failed to load profile', error)
+          if (mounted) setUser(null)
+        }
+      } else {
+        if (mounted) setUser(null)
+      }
+
+      if (mounted) setIsLoading(false)
     }
-    setIsLoading(false)
+
+    // Initialize session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      handleSession(session)
+    })
+
+    // Listen for changes
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      // Reset loading state on auth change to ensure UI updates correctly
+      // But only if we are transitioning states
+      handleSession(session)
+    })
+
+    return () => {
+      mounted = false
+      subscription.unsubscribe()
+    }
   }, [])
 
   const login = async (email: string, password?: string) => {
+    if (!password) throw new Error('Password is required')
     setIsLoading(true)
     try {
-      // Password ignored in mock
-      const profile = await authService.login(email)
-      setUser(profile)
-      localStorage.setItem('pdfcorretor_user', JSON.stringify(profile))
-    } finally {
+      await authService.login(email, password)
+      // State update is handled by onAuthStateChange
+    } catch (error) {
       setIsLoading(false)
+      throw error
     }
   }
 
   const signUp = async (name: string, email: string, password?: string) => {
+    if (!password) throw new Error('Password is required')
     setIsLoading(true)
     try {
-      const profile = await authService.signUp(name, email)
-      setUser(profile)
-      localStorage.setItem('pdfcorretor_user', JSON.stringify(profile))
-    } finally {
+      await authService.signUp(name, email, password)
+      // State update is handled by onAuthStateChange
+    } catch (error) {
       setIsLoading(false)
+      throw error
     }
   }
 
@@ -60,7 +102,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       await authService.logout()
       setUser(null)
-      localStorage.removeItem('pdfcorretor_user')
+      setSession(null)
     } finally {
       setIsLoading(false)
     }
@@ -70,6 +112,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     <AuthContext.Provider
       value={{
         user,
+        session,
         isAuthenticated: !!user,
         isLoading,
         login,

@@ -49,11 +49,12 @@ export default function RecoveryPage() {
         title: 'Email enviado',
         description: 'Verifique sua caixa de entrada para redefinir a senha.',
       })
-    } catch (error) {
+    } catch (error: any) {
       toast({
         variant: 'destructive',
         title: 'Erro',
-        description: 'Não foi possível enviar o email de recuperação.',
+        description:
+          error.message || 'Não foi possível enviar o email de recuperação.',
       })
     }
   }

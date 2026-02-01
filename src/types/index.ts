@@ -2,7 +2,7 @@ export type Role = 'admin' | 'corretor'
 
 export interface Profile {
   id: string
-  name: string
+  name: string | null
   email: string
   role: Role
   created_at: string

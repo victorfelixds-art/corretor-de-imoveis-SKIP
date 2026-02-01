@@ -24,6 +24,7 @@ export default function AdminLayout() {
     return <Navigate to="/" state={{ from: location }} replace />
   }
 
+  // Redirect non-admins to App Panel
   if (user.role !== 'admin') {
     return <Navigate to="/app" replace />
   }
