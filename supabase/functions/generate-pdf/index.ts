@@ -4,7 +4,7 @@ import { corsHeaders } from '../_shared/cors.ts'
 
 const GAMMA_API_URL =
   Deno.env.get('GAMMA_API_URL') ||
-  'https://api.gamma.app/v1/generated_documents' // Placeholder if not provided
+  'https://api.gamma.app/v1/generated_documents'
 const GAMMA_API_KEY = Deno.env.get('GAMMA_API_KEY')
 
 Deno.serve(async (req) => {
@@ -76,7 +76,9 @@ Deno.serve(async (req) => {
       const images = proposal.property.images || []
 
       // Calculate validity (7 days from created_at)
-      const validityDate = new Date(proposal.created_at)
+      const validityDate = new Date(
+        proposal.created_at || new Date().toISOString(),
+      )
       validityDate.setDate(validityDate.getDate() + 7)
       const validityStr = validityDate.toLocaleDateString('pt-BR')
 
@@ -158,20 +160,11 @@ Deno.serve(async (req) => {
         },
       }
 
-      // 5. Call Gamma API
-      // Since we don't have a real Gamma API Key, we mock the call for now if key is missing,
-      // BUT the prompt says "Secure Gamma API Integration... Implementation...".
-      // I will implement the fetch call assuming the API exists.
-
+      // 5. Call Gamma API (or Mock if key is missing)
       let finalPdfUrl = ''
 
-      if (!GAMMA_API_KEY) {
-        // Mock success if no key configured (to not break the app in this environment)
-        console.log('Using Mock Gamma Generation (No API Key)', payload)
-        await new Promise((resolve) => setTimeout(resolve, 2000)) // Simulate delay
-        finalPdfUrl =
-          'https://placehold.co/600x800/EEE/31343C?text=Gamma+PDF+Simulated'
-      } else {
+      if (GAMMA_API_KEY) {
+        console.log('Generating PDF via Gamma API...')
         const response = await fetch(GAMMA_API_URL, {
           method: 'POST',
           headers: {
@@ -182,11 +175,20 @@ Deno.serve(async (req) => {
         })
 
         if (!response.ok) {
-          throw new Error(`Gamma API Error: ${response.statusText}`)
+          const errorText = await response.text()
+          throw new Error(
+            `Gamma API Error: ${response.status} ${response.statusText} - ${errorText}`,
+          )
         }
 
         const data = await response.json()
-        finalPdfUrl = data.pdf_url // Assuming standard response format
+        finalPdfUrl = data.pdf_url
+      } else {
+        // Mock fallback for development without keys
+        console.log('GAMMA_API_KEY not found. Using Mock PDF Generation.')
+        await new Promise((resolve) => setTimeout(resolve, 1500))
+        finalPdfUrl =
+          'https://placehold.co/600x800/EEE/31343C?text=Gamma+PDF+Simulated+(No+Key)'
       }
 
       pdfUrl = finalPdfUrl

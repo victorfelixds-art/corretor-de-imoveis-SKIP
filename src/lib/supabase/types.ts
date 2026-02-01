@@ -69,28 +69,37 @@ export type Database = {
       profiles: {
         Row: {
           active_layout_id: string | null
+          avatar_url: string | null
           created_at: string
+          creci: string | null
           email: string
           id: string
           name: string | null
+          phone: string | null
           role: string
           updated_at: string
         }
         Insert: {
           active_layout_id?: string | null
+          avatar_url?: string | null
           created_at?: string
+          creci?: string | null
           email: string
           id: string
           name?: string | null
+          phone?: string | null
           role?: string
           updated_at?: string
         }
         Update: {
           active_layout_id?: string | null
+          avatar_url?: string | null
           created_at?: string
+          creci?: string | null
           email?: string
           id?: string
           name?: string | null
+          phone?: string | null
           role?: string
           updated_at?: string
         }
@@ -256,6 +265,10 @@ export type Database = {
         Returns: undefined
       }
       is_admin: { Args: never; Returns: boolean }
+      refund_credit: {
+        Args: { p_credit_type: string; p_user_id: string }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never
