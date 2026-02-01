@@ -13,6 +13,16 @@ export const proposalsService = {
     return data as Proposal[]
   },
 
+  count: async (userId: string) => {
+    const { count, error } = await supabase
+      .from('proposals')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', userId)
+
+    if (error) throw error
+    return count || 0
+  },
+
   create: async (
     proposal: Omit<
       Proposal,

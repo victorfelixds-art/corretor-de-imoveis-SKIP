@@ -13,9 +13,14 @@ import {
   AlertCircle,
   TrendingUp,
   Plus,
+  CheckSquare,
+  Building2,
+  Layout,
+  Square,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { proposalsService } from '@/services/proposals'
+import { propertiesService } from '@/services/properties'
 import useAuthStore from '@/stores/useAuthStore'
 import { Proposal } from '@/types'
 import {
@@ -29,25 +34,35 @@ import { useNavigate } from 'react-router-dom'
 import { isSameMonth, parseISO } from 'date-fns'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
 
 export default function DashboardPage() {
   const { user } = useAuthStore()
   const [proposals, setProposals] = useState<Proposal[]>([])
+  const [propertiesCount, setPropertiesCount] = useState(0)
   const [loading, setLoading] = useState(true)
   const [dateFilter, setDateFilter] = useState('this-month')
   const navigate = useNavigate()
 
   useEffect(() => {
     if (user) {
-      loadProposals()
+      loadData()
     }
   }, [user])
 
-  const loadProposals = async () => {
+  const loadData = async () => {
     setLoading(true)
     try {
-      const data = await proposalsService.list(user!.id)
-      setProposals(data)
+      const [proposalsData, propsCount] = await Promise.all([
+        proposalsService.list(user!.id),
+        propertiesService.count(user!.id),
+      ])
+      setProposals(proposalsData)
+      setPropertiesCount(propsCount)
     } catch (error) {
       console.error(error)
     } finally {
@@ -98,6 +113,15 @@ export default function DashboardPage() {
     }
   }
 
+  // Onboarding Logic
+  const hasProperties = propertiesCount > 0
+  const hasActiveLayout = !!user?.active_layout_id
+  const hasProposals = proposals.length > 0
+  const showOnboarding = !hasProperties || !hasProposals // Hide only if both are done (assuming layout is part of proposal flow) - wait, spec says "auto-hide once all three items are completed"
+  const allStepsCompleted = hasProperties && hasActiveLayout && hasProposals
+
+  const isProposalDisabled = !hasActiveLayout
+
   return (
     <div className="flex flex-col gap-8 max-w-[1600px] mx-auto">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -119,14 +143,157 @@ export default function DashboardPage() {
               <SelectItem value="all-time">Todo o período</SelectItem>
             </SelectContent>
           </Select>
-          <Button
-            onClick={() => navigate('/app/proposals/new')}
-            className="shadow-lg shadow-blue-500/20"
-          >
-            <Plus className="mr-2 h-4 w-4" /> Nova Proposta
-          </Button>
+
+          {isProposalDisabled ? (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div className="inline-block">
+                  <Button
+                    disabled
+                    className="shadow-lg shadow-blue-500/10 opacity-50 cursor-not-allowed"
+                  >
+                    <Plus className="mr-2 h-4 w-4" /> Nova Proposta
+                  </Button>
+                </div>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>
+                  Escolha um layout na biblioteca antes de gerar sua proposta.
+                </p>
+              </TooltipContent>
+            </Tooltip>
+          ) : (
+            <Button
+              onClick={() => navigate('/app/proposals/new')}
+              className="shadow-lg shadow-blue-500/20"
+            >
+              <Plus className="mr-2 h-4 w-4" /> Nova Proposta
+            </Button>
+          )}
         </div>
       </div>
+
+      {/* Onboarding Checklist */}
+      {!loading && !allStepsCompleted && (
+        <Card className="border-primary/20 bg-primary/5">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-lg flex items-center gap-2">
+              <CheckSquare className="h-5 w-5 text-primary" />
+              Primeiros passos no pdfcorretor
+            </CardTitle>
+            <CardDescription>
+              Complete as etapas abaixo para começar a gerar propostas
+              profissionais.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid gap-4 md:grid-cols-3">
+              <div
+                className={cn(
+                  'flex items-center gap-3 p-3 rounded-lg border transition-colors',
+                  hasProperties
+                    ? 'bg-background/60 border-primary/20 opacity-70'
+                    : 'bg-background border-border shadow-sm',
+                )}
+              >
+                {hasProperties ? (
+                  <CheckCircle className="h-5 w-5 text-green-500 shrink-0" />
+                ) : (
+                  <Square className="h-5 w-5 text-muted-foreground shrink-0" />
+                )}
+                <div className="flex-1">
+                  <p
+                    className={cn(
+                      'text-sm font-medium',
+                      hasProperties && 'line-through text-muted-foreground',
+                    )}
+                  >
+                    Cadastrar primeiro imóvel
+                  </p>
+                </div>
+                {!hasProperties && (
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => navigate('/app/properties/new')}
+                  >
+                    Ir
+                  </Button>
+                )}
+              </div>
+
+              <div
+                className={cn(
+                  'flex items-center gap-3 p-3 rounded-lg border transition-colors',
+                  hasActiveLayout
+                    ? 'bg-background/60 border-primary/20 opacity-70'
+                    : 'bg-background border-border shadow-sm',
+                )}
+              >
+                {hasActiveLayout ? (
+                  <CheckCircle className="h-5 w-5 text-green-500 shrink-0" />
+                ) : (
+                  <Square className="h-5 w-5 text-muted-foreground shrink-0" />
+                )}
+                <div className="flex-1">
+                  <p
+                    className={cn(
+                      'text-sm font-medium',
+                      hasActiveLayout && 'line-through text-muted-foreground',
+                    )}
+                  >
+                    Escolher um layout
+                  </p>
+                </div>
+                {!hasActiveLayout && (
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => navigate('/app/library')}
+                  >
+                    Ir
+                  </Button>
+                )}
+              </div>
+
+              <div
+                className={cn(
+                  'flex items-center gap-3 p-3 rounded-lg border transition-colors',
+                  hasProposals
+                    ? 'bg-background/60 border-primary/20 opacity-70'
+                    : 'bg-background border-border shadow-sm',
+                )}
+              >
+                {hasProposals ? (
+                  <CheckCircle className="h-5 w-5 text-green-500 shrink-0" />
+                ) : (
+                  <Square className="h-5 w-5 text-muted-foreground shrink-0" />
+                )}
+                <div className="flex-1">
+                  <p
+                    className={cn(
+                      'text-sm font-medium',
+                      hasProposals && 'line-through text-muted-foreground',
+                    )}
+                  >
+                    Gerar primeira proposta
+                  </p>
+                </div>
+                {!hasProposals && (
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    disabled={isProposalDisabled}
+                    onClick={() => navigate('/app/proposals/new')}
+                  >
+                    Ir
+                  </Button>
+                )}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-5">
         <Card className="hover:shadow-md transition-shadow">
@@ -279,23 +446,49 @@ export default function DashboardPage() {
               </div>
               Cadastrar Imóvel
             </Button>
-            <Button
-              variant="secondary"
-              className="w-full justify-start h-12 text-left font-normal"
-              onClick={() => navigate('/app/proposals/new')}
-            >
-              <div className="bg-emerald-100 dark:bg-emerald-900/30 p-1.5 rounded mr-3 text-emerald-600">
-                <FileText className="size-4" />
-              </div>
-              Nova Proposta
-            </Button>
+
+            {isProposalDisabled ? (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="w-full">
+                    <Button
+                      variant="secondary"
+                      disabled
+                      className="w-full justify-start h-12 text-left font-normal opacity-60"
+                    >
+                      <div className="bg-emerald-100 dark:bg-emerald-900/30 p-1.5 rounded mr-3 text-emerald-600">
+                        <FileText className="size-4" />
+                      </div>
+                      Nova Proposta
+                    </Button>
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>
+                    Escolha um layout na biblioteca antes de gerar sua proposta.
+                  </p>
+                </TooltipContent>
+              </Tooltip>
+            ) : (
+              <Button
+                variant="secondary"
+                className="w-full justify-start h-12 text-left font-normal"
+                onClick={() => navigate('/app/proposals/new')}
+              >
+                <div className="bg-emerald-100 dark:bg-emerald-900/30 p-1.5 rounded mr-3 text-emerald-600">
+                  <FileText className="size-4" />
+                </div>
+                Nova Proposta
+              </Button>
+            )}
+
             <Button
               variant="secondary"
               className="w-full justify-start h-12 text-left font-normal"
               onClick={() => navigate('/app/library')}
             >
               <div className="bg-purple-100 dark:bg-purple-900/30 p-1.5 rounded mr-3 text-purple-600">
-                <Library className="size-4" />
+                <Layout className="size-4" />
               </div>
               Biblioteca de Layouts
             </Button>
@@ -307,4 +500,4 @@ export default function DashboardPage() {
 }
 
 // Icon import helper
-import { Building2, Library } from 'lucide-react'
+import { Building2 as Building2Icon, Library } from 'lucide-react'

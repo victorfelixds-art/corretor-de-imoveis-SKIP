@@ -13,6 +13,16 @@ export const propertiesService = {
     return data as Property[]
   },
 
+  count: async (userId: string) => {
+    const { count, error } = await supabase
+      .from('properties')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', userId)
+
+    if (error) throw error
+    return count || 0
+  },
+
   create: async (property: Omit<Property, 'id' | 'created_at' | 'user_id'>) => {
     const {
       data: { user },

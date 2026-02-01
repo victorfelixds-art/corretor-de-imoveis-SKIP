@@ -11,28 +11,38 @@ import { layoutsService, AVAILABLE_LAYOUTS } from '@/services/layouts'
 import { Layout } from '@/types'
 import useAuthStore from '@/stores/useAuthStore'
 import { Badge } from '@/components/ui/badge'
-import { Check, Star } from 'lucide-react'
+import { Check, Star, AlertTriangle, Layout as LayoutIcon } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 
 export default function LibraryPage() {
-  const { user } = useAuthStore()
+  const { user, refreshProfile } = useAuthStore()
   const { toast } = useToast()
   const [layouts] = useState<Layout[]>(AVAILABLE_LAYOUTS)
   const [activeLayoutId, setActiveLayoutId] = useState<string | null>(
     user?.active_layout_id || null,
   )
 
+  useEffect(() => {
+    if (user?.active_layout_id) {
+      setActiveLayoutId(user.active_layout_id)
+    }
+  }, [user])
+
   const handleSetActive = async (layoutId: string) => {
     try {
       if (user) {
         await layoutsService.setActiveLayout(user.id, layoutId)
         setActiveLayoutId(layoutId)
+        await refreshProfile()
         toast({ title: 'Layout ativo atualizado!' })
       }
     } catch (error) {
       toast({ title: 'Erro ao atualizar layout', variant: 'destructive' })
     }
   }
+
+  const hasActiveLayout = !!activeLayoutId
 
   return (
     <div className="space-y-8 max-w-[1600px] mx-auto">
@@ -44,6 +54,30 @@ export default function LibraryPage() {
           Escolha o visual profissional das suas propostas.
         </p>
       </div>
+
+      {!hasActiveLayout && (
+        <Alert
+          variant="default"
+          className="border-amber-200 bg-amber-50 dark:bg-amber-950/20 dark:border-amber-900"
+        >
+          <AlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-500" />
+          <AlertTitle className="text-amber-800 dark:text-amber-500 font-semibold">
+            Escolha um layout para suas propostas
+          </AlertTitle>
+          <AlertDescription className="text-amber-700 dark:text-amber-400 mt-1">
+            O layout define a aparência do PDF que seus clientes vão receber.
+            Você precisa selecionar um layout para começar a gerar propostas.
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {hasActiveLayout && (
+        <div className="text-sm text-muted-foreground bg-secondary/30 p-3 rounded-lg flex items-center gap-2">
+          <LayoutIcon className="h-4 w-4" />
+          Você pode trocar de layout quando quiser antes de gerar novas
+          propostas.
+        </div>
+      )}
 
       <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {layouts.map((layout) => (

@@ -18,6 +18,7 @@ interface AuthContextType {
   login: (email: string, password?: string) => Promise<void>
   signUp: (name: string, email: string, password?: string) => Promise<void>
   logout: () => Promise<void>
+  refreshProfile: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextType | null>(null)
@@ -108,6 +109,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }
 
+  const refreshProfile = async () => {
+    if (!session?.user) return
+    try {
+      const profile = await authService.getProfile(session.user.id)
+      setUser(profile)
+    } catch (error) {
+      console.error('Failed to refresh profile', error)
+    }
+  }
+
   return (
     <AuthContext.Provider
       value={{
@@ -118,6 +129,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         login,
         signUp,
         logout,
+        refreshProfile,
       }}
     >
       {children}

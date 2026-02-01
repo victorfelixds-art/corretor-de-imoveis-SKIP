@@ -8,13 +8,18 @@ import {
   CardTitle,
 } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Plus, MapPin, Ruler, Search } from 'lucide-react'
+import { Plus, MapPin, Ruler, Search, Home } from 'lucide-react'
 import { propertiesService } from '@/services/properties'
 import useAuthStore from '@/stores/useAuthStore'
 import { Property } from '@/types'
 import { useNavigate } from 'react-router-dom'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Input } from '@/components/ui/input'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
 
 export default function PropertiesPage() {
   const { user } = useAuthStore()
@@ -51,6 +56,8 @@ export default function PropertiesPage() {
     p.name.toLowerCase().includes(searchTerm.toLowerCase()),
   )
 
+  const hasActiveLayout = !!user?.active_layout_id
+
   return (
     <div className="space-y-8 max-w-[1600px] mx-auto">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -86,21 +93,24 @@ export default function PropertiesPage() {
           ))}
         </div>
       ) : filtered.length === 0 ? (
-        <div className="text-center py-20 border-2 border-dashed rounded-xl bg-slate-50/50 dark:bg-slate-900/20">
-          <h3 className="text-lg font-medium text-foreground">
-            Nenhum imóvel encontrado
+        <div className="flex flex-col items-center justify-center py-20 border-2 border-dashed rounded-xl bg-slate-50/50 dark:bg-slate-900/20 text-center">
+          <div className="bg-primary/10 p-4 rounded-full mb-4">
+            <Home className="h-10 w-10 text-primary" />
+          </div>
+          <h3 className="text-xl font-semibold text-foreground">
+            Você ainda não cadastrou nenhum imóvel.
           </h3>
-          <p className="text-sm text-secondary mt-2">
-            {searchTerm
-              ? 'Tente buscar por outro termo.'
-              : 'Cadastre seu primeiro imóvel para começar.'}
+          <p className="text-secondary mt-2 max-w-md mx-auto">
+            Cadastre seu primeiro imóvel para começar a criar propostas
+            profissionais.
           </p>
           {!searchTerm && (
             <Button
               className="mt-6"
+              size="lg"
               onClick={() => navigate('/app/properties/new')}
             >
-              Cadastrar Agora
+              Cadastrar imóvel
             </Button>
           )}
         </div>
@@ -159,15 +169,37 @@ export default function PropertiesPage() {
                 </div>
               </CardContent>
               <CardFooter className="p-4 pt-0 bg-muted/10">
-                <Button
-                  variant="secondary"
-                  className="w-full"
-                  onClick={() =>
-                    navigate(`/app/proposals/new?property=${property.id}`)
-                  }
-                >
-                  Gerar Proposta
-                </Button>
+                {!hasActiveLayout ? (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div className="w-full">
+                        <Button
+                          variant="secondary"
+                          className="w-full opacity-60"
+                          disabled
+                        >
+                          Gerar Proposta
+                        </Button>
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>
+                        Escolha um layout na biblioteca antes de gerar sua
+                        proposta.
+                      </p>
+                    </TooltipContent>
+                  </Tooltip>
+                ) : (
+                  <Button
+                    variant="secondary"
+                    className="w-full"
+                    onClick={() =>
+                      navigate(`/app/proposals/new?property=${property.id}`)
+                    }
+                  >
+                    Gerar Proposta
+                  </Button>
+                )}
               </CardFooter>
             </Card>
           ))}

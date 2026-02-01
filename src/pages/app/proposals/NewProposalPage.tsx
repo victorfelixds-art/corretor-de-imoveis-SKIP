@@ -4,14 +4,7 @@ import { useForm, useFieldArray } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
+import { Card, CardContent, CardFooter } from '@/components/ui/card'
 import {
   Form,
   FormControl,
@@ -19,7 +12,6 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-  FormDescription,
 } from '@/components/ui/form'
 import {
   Select,
@@ -36,8 +28,9 @@ import { Property, Layout } from '@/types'
 import { useToast } from '@/hooks/use-toast'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import useAuthStore from '@/stores/useAuthStore'
-import { Check, Loader2 } from 'lucide-react'
+import { Check, Loader2, Info, Building2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { Badge } from '@/components/ui/badge'
 
 const proposalSchema = z.object({
   propertyId: z.string().min(1, 'Selecione um imóvel'),
@@ -70,6 +63,7 @@ export default function NewProposalPage() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const [properties, setProperties] = useState<Property[]>([])
+  const [loadingProps, setLoadingProps] = useState(true)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [layouts] = useState<Layout[]>(AVAILABLE_LAYOUTS)
 
@@ -96,7 +90,11 @@ export default function NewProposalPage() {
 
   useEffect(() => {
     if (user) {
-      propertiesService.list(user.id).then(setProperties)
+      setLoadingProps(true)
+      propertiesService
+        .list(user.id)
+        .then(setProperties)
+        .finally(() => setLoadingProps(false))
     }
   }, [user])
 
@@ -130,8 +128,13 @@ export default function NewProposalPage() {
   const prevStep = () => setStep((s) => s - 1)
 
   const onSubmit = async (data: ProposalFormValues) => {
+    if (!user) return
     setIsSubmitting(true)
     try {
+      // Check if this is the first proposal
+      const existingCount = await proposalsService.count(user.id)
+      const isFirst = existingCount === 0
+
       // 1. Consume credit
       await creditsService.consumeProposal()
 
@@ -146,7 +149,17 @@ export default function NewProposalPage() {
         layout_id: data.layoutId,
       })
 
-      toast({ title: 'Proposta gerada com sucesso!' })
+      if (isFirst) {
+        toast({
+          title: 'Parabéns! Sua primeira proposta foi gerada com sucesso 🎉',
+          description: 'Agora envie para seu cliente e acompanhe o retorno.',
+          duration: 8000,
+          className: 'bg-green-50 border-green-200 text-green-800',
+        })
+      } else {
+        toast({ title: 'Proposta gerada com sucesso!' })
+      }
+
       navigate(`/app/proposals/${proposal.id}`)
     } catch (error: any) {
       toast({
@@ -161,6 +174,31 @@ export default function NewProposalPage() {
   }
 
   const selectedLayout = layouts.find((l) => l.id === form.watch('layoutId'))
+
+  // Property Requirement Blocking Block
+  if (!loadingProps && properties.length === 0) {
+    return (
+      <div className="max-w-2xl mx-auto py-12">
+        <Card className="text-center p-8">
+          <div className="flex justify-center mb-6">
+            <div className="bg-primary/10 p-4 rounded-full">
+              <Building2 className="h-10 w-10 text-primary" />
+            </div>
+          </div>
+          <h2 className="text-2xl font-bold mb-3">
+            Cadastre um imóvel primeiro
+          </h2>
+          <p className="text-muted-foreground mb-8 max-w-md mx-auto">
+            Antes de gerar uma proposta, você precisa cadastrar pelo menos um
+            imóvel para associar ao documento.
+          </p>
+          <Button onClick={() => navigate('/app/properties/new')} size="lg">
+            Cadastrar imóvel
+          </Button>
+        </Card>
+      </div>
+    )
+  }
 
   return (
     <div className="max-w-3xl mx-auto space-y-6 pb-20">
@@ -219,18 +257,6 @@ export default function NewProposalPage() {
                       </FormItem>
                     )}
                   />
-                  {properties.length === 0 && (
-                    <div className="text-sm text-yellow-600 bg-yellow-50 p-3 rounded-md">
-                      Você não tem imóveis cadastrados.{' '}
-                      <a
-                        href="/app/properties/new"
-                        className="underline font-bold"
-                      >
-                        Cadastre um imóvel
-                      </a>{' '}
-                      antes de continuar.
-                    </div>
-                  )}
                 </div>
               )}
 
@@ -345,13 +371,7 @@ export default function NewProposalPage() {
                         )}
                         onClick={() => {
                           if (layout.is_pro) {
-                            // Simplified check: assume no pro subscription for demo
-                            // In real app, check user.subscription
-                            // For now, allow selecting everything or block logic
-                            // User story: "Users can see all layouts but only select "Base" layouts unless they have a "Pro+" subscription."
-                            // I'll assume standard user is BASE.
-                            // Mocking subscription check logic here:
-                            const hasPro = false // MOCK
+                            const hasPro = false // MOCK check
                             if (!hasPro) {
                               toast({
                                 title: 'Upgrade necessário',
@@ -408,9 +428,10 @@ export default function NewProposalPage() {
                       <strong>Layout:</strong> {selectedLayout?.name}
                     </p>
                   </div>
-                  <p className="text-muted-foreground text-sm">
-                    Ao clicar em Gerar, 1 crédito será consumido.
-                  </p>
+                  <div className="flex items-center justify-center gap-2 text-muted-foreground text-sm bg-secondary/30 p-2 rounded">
+                    <Info className="h-4 w-4" />
+                    Cada proposta gerada consome 1 crédito.
+                  </div>
                 </div>
               )}
             </form>
