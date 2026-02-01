@@ -129,16 +129,35 @@ export default function NewProposalPage() {
 
   const onSubmit = async (data: ProposalFormValues) => {
     if (!user) return
+
+    // Check layout before submitting
+    if (!data.layoutId) {
+      toast({
+        variant: 'destructive',
+        title: 'Atenção',
+        description:
+          'Selecione um layout na biblioteca antes de gerar seu PDF.',
+      })
+      return
+    }
+
     setIsSubmitting(true)
     try {
       // Check if this is the first proposal
       const existingCount = await proposalsService.count(user.id)
       const isFirst = existingCount === 0
 
-      // 1. Consume credit
+      // 1. Consume credit check (Business Logic)
+      const canConsume = await creditsService.canConsumeProposal(user.id)
+      if (!canConsume) {
+        throw new Error(
+          'Você não possui créditos suficientes. Adquira um pacote para continuar.',
+        )
+      }
+
+      // 2. Consume credit & Create
       await creditsService.consumeProposal()
 
-      // 2. Create proposal
       const proposal = await proposalsService.create({
         property_id: data.propertyId,
         client_name: data.clientName,
@@ -164,7 +183,7 @@ export default function NewProposalPage() {
     } catch (error: any) {
       toast({
         variant: 'destructive',
-        title: 'Erro ao gerar proposta',
+        title: 'Não foi possível gerar a proposta',
         description:
           error.message || 'Verifique seus créditos ou tente novamente.',
       })
@@ -186,11 +205,10 @@ export default function NewProposalPage() {
             </div>
           </div>
           <h2 className="text-2xl font-bold mb-3">
-            Cadastre um imóvel primeiro
+            Cadastre o imóvel primeiro
           </h2>
           <p className="text-muted-foreground mb-8 max-w-md mx-auto">
-            Antes de gerar uma proposta, você precisa cadastrar pelo menos um
-            imóvel para associar ao documento.
+            Antes de gerar uma proposta, cadastre as informações do imóvel.
           </p>
           <Button onClick={() => navigate('/app/properties/new')} size="lg">
             Cadastrar imóvel

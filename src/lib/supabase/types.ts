@@ -258,6 +258,35 @@ export type Database = {
         }
         Relationships: []
       }
+      proposal_events: {
+        Row: {
+          created_at: string | null
+          id: string
+          proposal_id: string
+          type: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          proposal_id: string
+          type: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          proposal_id?: string
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'proposal_events_proposal_id_fkey'
+            columns: ['proposal_id']
+            isOneToOne: false
+            referencedRelation: 'proposals'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       proposals: {
         Row: {
           client_name: string

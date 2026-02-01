@@ -55,6 +55,11 @@ Deno.serve(async (req) => {
 
     if (profileError || !profile) throw new Error('Profile not found')
 
+    // Enforce Active Layout (Business Logic)
+    // Always use profile.active_layout_id if set, otherwise fallback to proposal's (if valid), otherwise default
+    const enforcedLayoutId =
+      profile.active_layout_id || proposal.layout_id || 'layout-base-1'
+
     // Fetch Global Settings
     const { data: settings } = await supabaseAdmin
       .from('admin_settings')
@@ -69,13 +74,23 @@ Deno.serve(async (req) => {
     const { data: layout } = await supabaseAdmin
       .from('layouts')
       .select('*')
-      .eq('id', proposal.layout_id)
+      .eq('id', enforcedLayoutId)
       .single()
+
+    if (!layout) throw new Error('Layout not found')
 
     // 3. Consume Credit (Transactional Start)
     const { data: creditType, error: creditError } =
       await supabaseClient.rpc('consume_credit')
-    if (creditError) throw new Error(`Credit error: ${creditError.message}`)
+    if (creditError) {
+      // Map postgres error to user friendly message
+      if (creditError.message.includes('Insufficient credits')) {
+        throw new Error(
+          'Você não possui créditos suficientes. Adquira um pacote para continuar.',
+        )
+      }
+      throw new Error(`Credit error: ${creditError.message}`)
+    }
 
     let pdfUrl = ''
 
@@ -107,7 +122,7 @@ Deno.serve(async (req) => {
       const adjustmentsLink = `${appUrl}/r/ajustes/${proposal.id}`
 
       const payload = {
-        template_id: layout?.gamma_template_id || 'default', // Use DB template ID
+        template_id: layout.gamma_template_id || 'default', // Use DB template ID
         data: {
           CORRETOR: {
             NOME: profile.name || 'Corretor',
@@ -215,12 +230,13 @@ Deno.serve(async (req) => {
 
       pdfUrl = finalPdfUrl
 
-      // 6. Update Proposal
+      // 6. Update Proposal with PDF URL and Ensure Layout Consistency
       const { error: updateError } = await supabaseAdmin
         .from('proposals')
         .update({
           pdf_url: pdfUrl,
           status: 'Gerada',
+          layout_id: enforcedLayoutId, // Enforce the layout used
         })
         .eq('id', proposal.id)
 

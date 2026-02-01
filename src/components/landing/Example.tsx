@@ -61,6 +61,7 @@ export function Example() {
                             src={slide.img}
                             alt={slide.title}
                             className="w-full h-full object-cover"
+                            loading="lazy"
                           />
                           <div className="absolute bottom-0 inset-x-0 bg-black/70 p-3 text-center">
                             <span className="text-white font-medium">

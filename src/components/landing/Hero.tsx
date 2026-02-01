@@ -63,6 +63,7 @@ export function Hero() {
               src="https://img.usecurling.com/p/1200/675?q=dashboard%20interface%20dark%20mode&color=black"
               alt="Dashboard Preview"
               className="w-full h-full object-cover opacity-80"
+              loading="eager"
             />
 
             {/* Floating Element Mobile */}
@@ -71,6 +72,7 @@ export function Hero() {
                 src="https://img.usecurling.com/p/300/600?q=mobile%20app%20interface%20dark&color=black"
                 alt="Mobile Preview"
                 className="w-full h-auto"
+                loading="lazy"
               />
             </div>
           </div>

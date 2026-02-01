@@ -49,17 +49,22 @@ export const proposalsService = {
     if (insertError) throw insertError
 
     // 2. Call Edge Function to Consume Credit & Generate PDF
-    // This is a transactional process handled by the backend
     const { data: generationData, error: generationError } =
       await supabase.functions.invoke('generate-pdf', {
         body: { proposal_id: draft.id },
       })
 
     if (generationError) {
-      // If generation fails (e.g. no credits), we should probably let the user know
-      // The proposal exists as draft/failed.
-      // For now, we propagate the error so the UI shows it.
+      // Clean up draft if generation failed (optional, but good for cleanliness)
+      // await supabase.from('proposals').delete().eq('id', draft.id)
+
+      // Map error to user friendly message if possible
       throw new Error(generationError.message || 'Erro na geração do PDF')
+    }
+
+    // Check for explicit error in data response
+    if (generationData?.error) {
+      throw new Error(generationData.error)
     }
 
     // 3. Return updated proposal

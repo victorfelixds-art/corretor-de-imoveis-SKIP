@@ -46,7 +46,7 @@ export function Testimonials() {
                 </p>
                 <div className="flex items-center gap-4">
                   <Avatar>
-                    <AvatarImage src={item.img} />
+                    <AvatarImage src={item.img} loading="lazy" />
                     <AvatarFallback>U</AvatarFallback>
                   </Avatar>
                   <div className="text-left">

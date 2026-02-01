@@ -27,12 +27,12 @@ export function Footer() {
           </div>
 
           <div className="flex gap-6 text-sm text-[#9CA3AF]">
-            <a href="#" className="hover:text-white transition-colors">
+            <Link to="/terms" className="hover:text-white transition-colors">
               Termos de Uso
-            </a>
-            <a href="#" className="hover:text-white transition-colors">
+            </Link>
+            <Link to="/privacy" className="hover:text-white transition-colors">
               Privacidade
-            </a>
+            </Link>
             <a
               href="mailto:contato@pdfcorretor.com"
               className="hover:text-white transition-colors"

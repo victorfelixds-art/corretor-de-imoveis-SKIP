@@ -10,6 +10,8 @@ import SignUpPage from './pages/auth/SignUpPage'
 import RecoveryPage from './pages/auth/RecoveryPage'
 import DashboardPage from './pages/app/DashboardPage'
 import NotFound from './pages/NotFound'
+import TermsPage from './pages/public/TermsPage'
+import PrivacyPage from './pages/public/PrivacyPage'
 
 // Admin Pages
 import AdminDashboardPage from './pages/admin/AdminDashboardPage'
@@ -46,6 +48,8 @@ const App = () => (
         <Routes>
           {/* Landing Page (Standalone) */}
           <Route path="/" element={<Index />} />
+          <Route path="/terms" element={<TermsPage />} />
+          <Route path="/privacy" element={<PrivacyPage />} />
 
           {/* Auth Routes */}
           <Route element={<AuthLayout />}>

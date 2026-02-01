@@ -36,6 +36,7 @@ export function TargetAudience() {
             src="https://img.usecurling.com/p/600/400?q=team%20meeting%20office&color=black"
             alt="Corretores trabalhando"
             className="rounded-lg shadow-2xl border border-[#1F2937] grayscale opacity-80"
+            loading="lazy"
           />
         </div>
       </div>
