@@ -7,6 +7,7 @@ import {
 import { AppSidebar } from './AppSidebar'
 import useAuthStore from '@/stores/useAuthStore'
 import { Separator } from '@/components/ui/separator'
+import { AdminSwitcher } from '@/components/admin/AdminSwitcher'
 
 export default function AppLayout() {
   const { user, isLoading } = useAuthStore()
@@ -24,10 +25,7 @@ export default function AppLayout() {
     return <Navigate to="/" state={{ from: location }} replace />
   }
 
-  // Redirect Admins to Admin Panel
-  if (user.role === 'admin') {
-    return <Navigate to="/admin" replace />
-  }
+  // Admin restriction REMOVED to allow Dual Access
 
   return (
     <SidebarProvider>
@@ -39,6 +37,7 @@ export default function AppLayout() {
           <div className="flex items-center gap-2 text-sm font-medium">
             <span>Bem-vindo, {user.name || user.email}</span>
           </div>
+          <AdminSwitcher />
         </header>
         <main className="flex-1 overflow-auto p-4 md:p-6 bg-slate-50/50 dark:bg-slate-900/50">
           <Outlet />

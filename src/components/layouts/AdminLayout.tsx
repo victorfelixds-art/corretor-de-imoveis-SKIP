@@ -7,6 +7,7 @@ import {
 import { AdminSidebar } from './AdminSidebar'
 import useAuthStore from '@/stores/useAuthStore'
 import { Separator } from '@/components/ui/separator'
+import { AdminSwitcher } from '@/components/admin/AdminSwitcher'
 
 export default function AdminLayout() {
   const { user, isLoading } = useAuthStore()
@@ -24,7 +25,7 @@ export default function AdminLayout() {
     return <Navigate to="/" state={{ from: location }} replace />
   }
 
-  // Redirect non-admins to App Panel
+  // Redirect non-admins to App Panel (Security Guard)
   if (user.role !== 'admin') {
     return <Navigate to="/app" replace />
   }
@@ -39,6 +40,7 @@ export default function AdminLayout() {
           <span className="font-semibold text-destructive">
             Área Administrativa
           </span>
+          <AdminSwitcher />
         </header>
         <main className="flex-1 overflow-auto p-4 md:p-6 bg-background">
           <Outlet />
