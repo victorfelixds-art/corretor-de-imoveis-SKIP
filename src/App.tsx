@@ -5,6 +5,7 @@ import { TooltipProvider } from '@/components/ui/tooltip'
 import { AuthProvider } from '@/stores/useAuthStore'
 
 import Index from './pages/Index'
+import LoginPage from './pages/auth/LoginPage'
 import SignUpPage from './pages/auth/SignUpPage'
 import RecoveryPage from './pages/auth/RecoveryPage'
 import DashboardPage from './pages/app/DashboardPage'
@@ -43,9 +44,12 @@ const App = () => (
         <Toaster />
         <Sonner />
         <Routes>
-          {/* Public / Auth Routes */}
+          {/* Landing Page (Standalone) */}
+          <Route path="/" element={<Index />} />
+
+          {/* Auth Routes */}
           <Route element={<AuthLayout />}>
-            <Route path="/" element={<Index />} />
+            <Route path="/auth/login" element={<LoginPage />} />
             <Route path="/auth/signup" element={<SignUpPage />} />
             <Route path="/auth/recovery" element={<RecoveryPage />} />
           </Route>

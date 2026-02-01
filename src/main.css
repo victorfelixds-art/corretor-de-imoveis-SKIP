@@ -11,57 +11,30 @@
     --primary-foreground: 0 0% 100%;
 
     /* Light Mode Palette */
-    /* Background #F9FAFB */
     --background: 210 20% 98%;
-    /* Surface/Cards #FFFFFF */
     --card: 0 0% 100%;
-    /* Primary Text #111827 */
     --foreground: 222 47% 11%;
     --card-foreground: 222 47% 11%;
-
-    /* Popovers same as cards */
     --popover: 0 0% 100%;
     --popover-foreground: 222 47% 11%;
-
-    /* Secondary/Muted */
-    /* Secondary Text #6B7280 */
     --secondary: 210 40% 96%;
     --secondary-foreground: 222 47% 11%;
-
     --muted: 210 40% 96.1%;
     --muted-foreground: 215 14% 46%;
-
     --accent: 210 40% 96.1%;
     --accent-foreground: 222 47% 11%;
-
-    /* Danger Red #EF4444 */
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 98%;
-
-    /* Border #E5E7EB */
     --border: 220 13% 91%;
     --input: 220 13% 91%;
     --ring: 221 83% 53%;
-
-    --radius: 0.5rem; /* 8px for buttons */
-
-    /* Custom Colors for Statuses */
-    --warning: 38 92% 50%; /* #F59E0B */
+    --radius: 0.5rem;
+    --warning: 38 92% 50%;
     --warning-foreground: 0 0% 100%;
-
-    --success: 160 84% 39%; /* #10B981 */
+    --success: 160 84% 39%;
     --success-foreground: 0 0% 100%;
 
-    /* Sidebar - In light mode, let's keep it dark or match requirements. 
-       User story says "UI must use Background...". 
-       Usually sidebars are distinct or blend in. 
-       The Reference had a dark sidebar. The prompt implies a "Global Design System" refresh.
-       I will use the "Background #F9FAFB" for main area, 
-       but Sidebar often keeps its own theme or follows "Surface" rule. 
-       Let's use Surface/Card color for sidebar in light mode for a "clean" look or Keep dark.
-       Acceptance criteria doesn't explicitly mandate Sidebar color, but says "UI must use...".
-       I will set Sidebar to Light in Light Mode to match "trustworthy" and "clean".
-    */
+    /* Sidebar */
     --sidebar-background: 0 0% 100%;
     --sidebar-foreground: 222 47% 11%;
     --sidebar-primary: 221 83% 53%;
@@ -79,37 +52,24 @@
   }
 
   .dark {
-    /* Dark Mode Palette */
-    /* Background #0B0F19 */
     --background: 223 39% 7%;
-    /* Surface/Cards #111827 */
     --card: 222 47% 11%;
-    /* Primary Text #F9FAFB */
     --foreground: 210 20% 98%;
     --card-foreground: 210 20% 98%;
-
     --popover: 222 47% 11%;
     --popover-foreground: 210 20% 98%;
-
-    /* Secondary Text #9CA3AF */
     --secondary: 217 33% 17%;
     --secondary-foreground: 210 20% 98%;
-
     --muted: 217 33% 17%;
     --muted-foreground: 218 11% 65%;
-
     --accent: 217 33% 17%;
     --accent-foreground: 210 20% 98%;
-
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 20% 98%;
-
-    /* Border #1F2937 */
     --border: 217 33% 17%;
     --input: 217 33% 17%;
     --ring: 221 83% 53%;
 
-    /* Sidebar Dark Mode */
     --sidebar-background: 223 39% 7%;
     --sidebar-foreground: 210 20% 98%;
     --sidebar-primary: 221 83% 53%;
@@ -118,6 +78,10 @@
     --sidebar-accent-foreground: 210 20% 98%;
     --sidebar-border: 217 33% 17%;
     --sidebar-ring: 221 83% 53%;
+  }
+
+  html {
+    scroll-behavior: smooth;
   }
 }
 
@@ -128,7 +92,6 @@
   body {
     @apply bg-background text-foreground font-sans;
   }
-  /* Typography Hierarchy */
   h1 {
     @apply text-xl md:text-2xl font-semibold tracking-tight;
   }

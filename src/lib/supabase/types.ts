@@ -15,6 +15,63 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_logs: {
+        Row: {
+          action_type: string
+          admin_id: string
+          created_at: string
+          description: string | null
+          details: Json | null
+          id: string
+          target_id: string | null
+        }
+        Insert: {
+          action_type: string
+          admin_id: string
+          created_at?: string
+          description?: string | null
+          details?: Json | null
+          id?: string
+          target_id?: string | null
+        }
+        Update: {
+          action_type?: string
+          admin_id?: string
+          created_at?: string
+          description?: string | null
+          details?: Json | null
+          id?: string
+          target_id?: string | null
+        }
+        Relationships: []
+      }
+      admin_settings: {
+        Row: {
+          created_at: string
+          description: string | null
+          key: string
+          label: string | null
+          updated_at: string
+          value: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          key: string
+          label?: string | null
+          updated_at?: string
+          value: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          key?: string
+          label?: string | null
+          updated_at?: string
+          value?: string
+        }
+        Relationships: []
+      }
       credit_usage_logs: {
         Row: {
           created_at: string | null
@@ -33,6 +90,42 @@ export type Database = {
           credit_type?: string
           id?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      layouts: {
+        Row: {
+          category: string
+          created_at: string
+          description: string | null
+          gamma_template_id: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          preview_url: string | null
+          updated_at: string
+        }
+        Insert: {
+          category?: string
+          created_at?: string
+          description?: string | null
+          gamma_template_id?: string | null
+          id: string
+          is_active?: boolean | null
+          name: string
+          preview_url?: string | null
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          description?: string | null
+          gamma_template_id?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          preview_url?: string | null
+          updated_at?: string
         }
         Relationships: []
       }
@@ -259,6 +352,16 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_adjust_credits: {
+        Args: {
+          p_admin_id: string
+          p_extra_delta: number
+          p_monthly_delta: number
+          p_reason: string
+          p_user_id: string
+        }
+        Returns: undefined
+      }
       consume_credit: { Args: never; Returns: string }
       increment_extra_credits: {
         Args: { amount: number; user_uuid: string }
